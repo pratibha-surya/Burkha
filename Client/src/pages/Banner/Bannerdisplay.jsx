@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const Bannerdisplay = () => {
   const [banners, setBanners] = useState([]);
-  const api = 'http://localhost:8080/banner/alldisplay';
+  const api = 'https://backend-20ar.onrender.com/banner/alldisplay';
 
   // Load banners
   const loadData = async () => {
@@ -28,7 +28,7 @@ const Bannerdisplay = () => {
     const confirmDelete = window.confirm('Are you sure you want to delete this banner?');
     if (!confirmDelete) return;
 
-    const deleteApi = `http://localhost:8080/banner/deleted/${id}`;
+    const deleteApi = `https://backend-20ar.onrender.com/banner/deleted/${id}`;
 
     try {
       await axios.delete(deleteApi);

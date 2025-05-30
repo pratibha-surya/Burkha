@@ -64,7 +64,7 @@ const Banner = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8080/banner/create',
+        'https://backend-20ar.onrender.com/banner/create',
         formData,
         {
           headers: {

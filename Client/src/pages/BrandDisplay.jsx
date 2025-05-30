@@ -10,7 +10,7 @@ const BrandDisplay = () => {
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
 
-  const apiUrl = 'http://localhost:8080/brand/display';
+  const apiUrl = 'https://backend-20ar.onrender.com/brand/display';
 
 
   console.log(brands,'sdfgh')
@@ -41,7 +41,7 @@ const BrandDisplay = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:8080/brand/${id}`);
+      await axios.delete(`https://backend-20ar.onrender.com/brand/${id}`);
       toast.success('Brand deleted successfully');
       setBrands(prev => prev.filter(brand => brand._id !== id));
     } catch (error) {
