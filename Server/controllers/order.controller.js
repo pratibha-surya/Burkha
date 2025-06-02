@@ -306,6 +306,24 @@ const getOrdersWithDueAmount = asyncHandler(async (req, res) => {
   });
 });
 
+
+const getMemberById = async (req, res) => {
+  try {
+    const order = await Vendor.findById(req.params.id);
+    if (!order) {
+      res.status(404);
+      throw new Error('Order not found');
+    }
+    res.status(200).json({
+      success: true,
+      order
+    });
+  } catch (error) {
+    console.log(error.message)
+  }
+};
+
+
 module.exports = {
   createOrder,
   getAllOrders,
@@ -318,5 +336,6 @@ module.exports = {
   getDeliveredOrders,
   getShippedOrders,
   getCancelledOrders,
-  getOrdersWithDueAmount
+  getOrdersWithDueAmount,
+  getMemberById
 };

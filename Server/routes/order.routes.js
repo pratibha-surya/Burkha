@@ -11,7 +11,8 @@ const {
   getDeliveredOrders,
   getShippedOrders,
   getCancelledOrders,
-  getOrdersWithDueAmount
+  getOrdersWithDueAmount,
+   getMemberById 
 } = require('../controllers/order.controller');
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.get('/status/delivered', getDeliveredOrders);
 router.get('/status/shipped', getShippedOrders);
 router.get('/status/cancelled', getCancelledOrders);
 router.get('/dueAmount/:hasDueAmount', getOrdersWithDueAmount);
+router.get("/member/:id", getMemberById)
 
 module.exports = router;

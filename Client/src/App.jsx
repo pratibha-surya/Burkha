@@ -57,6 +57,7 @@ import Banner from "./pages/Banner/Banner";
 import Bannerdisplay from "./pages/Banner/Bannerdisplay";
 import Customer from "./pages/ViewCustomer/Customer";
 import AllDetail from "./pages/ViewCustomer/AllDetail";
+import VendorDetail from "./pages/ViewCustomer/vendordeatil";
 
 
 function App() {
@@ -342,6 +343,7 @@ function AppContent({ onLogout }) {
                 </button>
               </div>
             </div>
+           
           )}
         </header>
 
@@ -378,6 +380,7 @@ function AppContent({ onLogout }) {
               <Route path="/bannerdisplay" element={<Bannerdisplay/>}/>
               <Route path="/customer" element={<Customer/>}/>
             <Route path="/vendordetails/:id" element={<AllDetail/>} />
+            <Route path="/vendor/:id" element={<VendorDetail/>}/>
 
 
 

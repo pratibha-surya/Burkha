@@ -5,7 +5,7 @@ const paymentSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Assuming a User model exists
-      required: true,
+  
     },
     orderId: {
       type: String,
@@ -17,7 +17,7 @@ const paymentSchema = new mongoose.Schema(
     },
     productname: {
       type: String,
-      required: true,
+     
     },
     paymentMode: {
       type: String,
