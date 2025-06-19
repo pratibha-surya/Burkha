@@ -7,15 +7,15 @@ const registrationSchema = new mongoose.Schema({
   },
   contactName: {
     type: String,
-    required: true,
+    
   },
   contactType: {
     type: String,
-    required: true,
+    
   },
   mobile1: {
     type: String,
-    required: true,
+   
     validate: {
       validator: function(v) {
         return /^\d{10}$/.test(v); // Validate that it's exactly 10 digits
@@ -58,28 +58,28 @@ const registrationSchema = new mongoose.Schema({
   },
   state: {
     type: String,
-    required: true,
+    
   },
   city: {
     type: String,
-    required: true,
+   
   },
   address: {
     type: String,
-    required: true,
+   
   },
   
   password:{
     type:String,
-    required:true
+ 
   },
   discount:{
     type:Number,
-    required:true
+   
   },
   limit:{
     type:Number,
-    required:true
+  
   },
 }, { timestamps: true }); // Automatically manage createdAt and updatedAt fields
 
