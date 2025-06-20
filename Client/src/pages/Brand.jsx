@@ -73,7 +73,7 @@ const Brand = () => {
     imageFiles.forEach((file) => formData.append('images', file));
  
     try {
-      const api = ' https://backend-project-g4mc.onrender.com/brand/add';
+      const api = ' http://localhost:8080/brand/add';
       const response = await axios.post(api, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

@@ -20,6 +20,88 @@ const getAllProducts = async (req, res) => {
     }
 };
 
+
+
+// const getAllProductshome = async (req, res) => {
+//     const { search, category } = req.query;
+//     try {
+//       const query = {};
+//       if (search) {
+//         query.name = { $regex: search, $options: "i" }; // Case-insensitive search
+//       }
+//       if (category) {
+//         query.category = category;
+//       }
+//       const products = await Product.find({ homeVisibility: true,query }).populate("category subCategory");
+//       res.status(200).json(products);
+//     } catch (error) {
+//       res.status(500).json({ message: "Error fetching products", error });
+//     }
+// };
+
+
+// const getAllProductshome = async (req, res) => {
+//   const { search, category } = req.query;
+
+//   try {
+//     const query = { homeVisibility: true }; // Always show only home-visible products
+
+//     if (search) {
+//       query.name = { $regex: search, $options: "i" }; // Case-insensitive search
+//     }
+
+//     if (category) {
+//       query.category = category;
+//     }
+
+//     const products = await Product.find(query).populate("category subCategory");
+
+//     res.status(200).json(products);
+//   } catch (error) {
+//     console.error("Error fetching home products:", error);
+//     res.status(500).json({ message: "Error fetching products", error });
+//   }
+// };
+
+
+const getAllProductshome = async (req, res) => {
+  const { search, category } = req.query;
+
+  try {
+    // Base query - only products with homeVisibility: true
+    const query = { homeVisibility: true };
+    
+    // Add search condition if provided
+    if (search) {
+        query.name = { $regex: search, $options: "i" }; // Case-insensitive search
+    }
+    
+    // Add category filter if provided
+    if (category) {
+        query.category = category;
+    }
+    
+    // Execute query with population
+    const products = await Product.find(query)
+    .populate("category subCategory")
+    .exec(); // Using .exec() for better promise handling
+    console.log(products,'aaaaaaaaaaaaaaaaaaaaaaaaa')
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products
+    });
+
+  } catch (error) {
+    console.error("Error fetching home products:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error while fetching products",
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
+  }
+};
 // Get a single product by ID
 const getProductById = async (req, res) => {
     try {
@@ -177,6 +259,27 @@ const purchaseProduct = async (req, res) => {
     }
 };
 
+
+const getproducthome = async (req, res) => {
+  const { homeVisibility } = req.body;
+
+  // Create a new variable to toggle
+  const newHomeVisibility = homeVisibility;
+
+  try {
+    console.log(homeVisibility,"sdafsa")
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      { homeVisibility: homeVisibility },
+      { new: true }
+    );
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating home visibility' });
+  }
+};
+
+
 // Delete a product
 const deleteProduct = async (req, res) => {
     try {
@@ -204,4 +307,4 @@ const getCoursesByCategory = async (req, res) => {
 }
   
 
-module.exports = { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, purchaseProduct, getCoursesByCategory };
+module.exports = { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, purchaseProduct, getCoursesByCategory,getAllProductshome,getproducthome };

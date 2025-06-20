@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
-    const api = " https://backend-project-g4mc.onrender.com/user/register";
+    const api = " http://localhost:8080/user/register";
     const navigate = useNavigate();
     
     const [formData, setFormData] = useState({

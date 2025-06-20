@@ -35,6 +35,7 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Subcategory"
   },
+  homeVisibility: { type: Boolean, default: false },
   size: [String],
   color: String,
   fabric: String,

@@ -16,7 +16,7 @@ const ContactDisplay = () => {
 
   const fetchEnquiries = async () => {
     try {
-      const response = await fetch(' https://backend-project-g4mc.onrender.com/contact/allcontact');
+      const response = await fetch(' http://localhost:8080/contact/allcontact');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -46,7 +46,7 @@ const ContactDisplay = () => {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(` https://backend-project-g4mc.onrender.com/contact/alldelete/${id}`, {
+      const response = await fetch(` http://localhost:8080/contact/alldelete/${id}`, {
         method: 'DELETE',
       });
       

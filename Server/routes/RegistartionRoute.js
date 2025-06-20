@@ -9,4 +9,5 @@ router.post('/login', userControler.Login); // Explicitly define the route for r
 router.get('/', userControler.getAllUsers);
 router.get("/:id", userControler.getVendorById)
 
+router.post('/resetpassword',userControler.resetPassword)
 module.exports = router;
