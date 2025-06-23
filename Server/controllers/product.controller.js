@@ -20,6 +20,28 @@ const getAllProducts = async (req, res) => {
     }
 };
 
+// controllers/productController.js
+const searchProducts = async (req, res) => {
+  try {
+    const { query } = req.query;
+    console.log(query);
+    
+     if (!query || typeof query !== 'string') {
+      return res.status(400).json({ message: "Invalid search query" });
+    }
+
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+      ]
+    });
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 // const getAllProductshome = async (req, res) => {
@@ -307,4 +329,4 @@ const getCoursesByCategory = async (req, res) => {
 }
   
 
-module.exports = { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, purchaseProduct, getCoursesByCategory,getAllProductshome,getproducthome };
+module.exports = { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, purchaseProduct, searchProducts,getCoursesByCategory,getAllProductshome,getproducthome };
