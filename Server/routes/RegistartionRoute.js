@@ -9,5 +9,17 @@ router.post('/login', userControler.Login); // Explicitly define the route for r
 router.get('/', userControler.getAllUsers);
 router.get("/:id", userControler.getVendorById)
 
+
+
+
+
+// router.post('/register', userControler.Registration);
+router.get('/users', userControler.getAllUsers);
+router.get('/users/:id', userControler.getUserById);
+router.put('/users/:id', userControler.updateUser);
+router.delete('/users/:id', userControler.deleteUser);
+
+
+
 router.post('/resetpassword',userControler.resetPassword)
 module.exports = router;

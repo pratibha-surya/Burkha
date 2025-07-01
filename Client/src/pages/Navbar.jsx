@@ -142,11 +142,24 @@ const Sidebar = () => {
 
 
   
+  {
+        label: "Registration",
+        icon: Layers,
+        subItems: [
+          { to: "/registration", label: "Registration", icon: UserPlus },
+
+      
+          {to:"/contactdisplay", label:"Contact", icon:QrCode},
+                  // {to:"/brand", label:"Brand", icon:QrCode},
+                  // {to:"/branddisplay", label:"Brandshow", icon:QrCode},
+                   {to:"/registrationvendor", label:"registrationvendor", icon:Home}
+        ],
+      },
 
 
    
 
-    { to: "/registration", label: "Registration", icon: UserPlus },
+    // { to: "/registration", label: "Registration", icon: UserPlus },
 
 
 

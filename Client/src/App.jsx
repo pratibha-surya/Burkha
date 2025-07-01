@@ -58,6 +58,7 @@ import Bannerdisplay from "./pages/Banner/Bannerdisplay";
 import Customer from "./pages/ViewCustomer/Customer";
 import AllDetail from "./pages/ViewCustomer/AllDetail";
 import VendorDetail from "./pages/ViewCustomer/vendordeatil";
+import RegistrationVendor from "./pages/RegsitartionVendor/RegistrationVendor";
 
 
 function App() {
@@ -145,7 +146,8 @@ function AppContent({ onLogout }) {
         label: "Stock-in",
         icon: Package,
         subItems: [
-          {to:"/purchasescan", label:"purchaseStock", icon:QrCode}
+          {to:"/purchasescan", label:"purchaseStock", icon:QrCode},
+         
 
 
         ],
@@ -170,14 +172,22 @@ function AppContent({ onLogout }) {
 
 
 
+      {
+        label: "Registration",
+        icon: Layers,
+        subItems: [
+          { to: "/registration", label: "Registration", icon: UserPlus },
 
-
-      { to: "/registration", label: "Registration", icon: UserPlus },
+      
           {to:"/contactdisplay", label:"Contact", icon:QrCode},
-                  {to:"/brand", label:"Brand", icon:QrCode},
-                  {to:"/branddisplay", label:"Brandshow", icon:QrCode}
+                  // {to:"/brand", label:"Brand", icon:QrCode},
+                  // {to:"/branddisplay", label:"Brandshow", icon:QrCode},
+                   {to:"/registrationvendor", label:"registrationvendor", icon:Home}
+        ],
+      },
 
-        
+
+      
 
 
 
@@ -350,7 +360,7 @@ function AppContent({ onLogout }) {
         {/* Main Content Area with Fixed Width and Scroll */}
         <main className="flex-1 w-[90vw] py-6 px-2 sm:px-4 overflow-hidden md:ml-[10vw]">
 
-          <div className="w-full max-w-5xl mx-auto h-full overflow-auto px-4 py-4 bg-white rounded-lg shadow">
+          <div className="w-full max-w-6xl mx-auto h-full overflow-auto px-4 py-4 bg-white rounded-lg shadow">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -381,6 +391,7 @@ function AppContent({ onLogout }) {
               <Route path="/customer" element={<Customer/>}/>
             <Route path="/vendordetails/:id" element={<AllDetail/>} />
             <Route path="/vendor/:id" element={<VendorDetail/>}/>
+            <Route path="/registrationvendor" element={<RegistrationVendor/>}/>
 
 
 

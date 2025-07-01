@@ -749,7 +749,7 @@ const Customer = () => {
   ];
 
   return (
-    <div className="max-w-5xl py-8 mx-auto">
+    <div className="max-w-6xl py-8 mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Vendor Details</h2>
         <div className="flex gap-2">
