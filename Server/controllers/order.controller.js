@@ -117,6 +117,7 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 });
 
+
 // Get all orders
 const getAllOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find().sort({ createdAt: -1 });
@@ -309,6 +310,8 @@ const getOrdersWithDueAmount = asyncHandler(async (req, res) => {
 
 const getMemberById = async (req, res) => {
   try {
+    const {id} = req.params;
+    if(! id) return res.status(401).json({success : false, message : "Please provide vendor ID"})
     const order = await Vendor.findById(req.params.id);
     if (!order) {
       res.status(404);

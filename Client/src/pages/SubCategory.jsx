@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, Save, X, Tag } from "lucide-react"
 import { addSubCategory, deleteSubCategory, fetchcategory, fetchSubcategory, updateSubCategory } from "../api"
+import { toast, ToastContainer } from "react-toastify"
 
 const SubCategoryManagement = () => {
   const [categories, setCategories] = useState([])
@@ -19,8 +20,7 @@ const SubCategoryManagement = () => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        // This would be replaced with actual API calls
-        // Simulating API response
+  
         const fetchCategories = async () => {
           const response = await fetchcategory();
           if (response.data) {
@@ -50,13 +50,11 @@ const SubCategoryManagement = () => {
     if (!newSubCategory.trim() || !selectedCategory) return
 
     try {
-      // This would be replaced with actual API call
-      // Simulating API response
       const response = await addSubCategory({ name: newSubCategory.trim(), category: selectedCategory });
       const newSubCategoryObj = response.data;
-
       setSubCategories([...subCategories, newSubCategoryObj])
       setNewSubCategory("")
+      toast.success("New SubCategory Added Successfully...")
     } catch (error) {
       console.error("Error adding subcategory:", error)
       setError("Failed to add subcategory. Please try again.")
@@ -70,15 +68,14 @@ const SubCategoryManagement = () => {
 
   const handleSaveEdit = async (id) => {
     if (!editName.trim()) return
-
     try {
-      // This would be replaced with actual API call
       const response = await updateSubCategory(id, {name: editName.trim()});
       setSubCategories(
         subCategories.map((subCat) => (subCat._id === id ? { ...subCat, name: editName.trim() } : subCat)),
       )
       setEditingSubCategory(null)
       setEditName("")
+         toast.info("SubCategory Edited Successfully...")
     } catch (error) {
       console.error("Error updating subcategory:", error)
       setError("Failed to update subcategory. Please try again.")
@@ -87,9 +84,9 @@ const SubCategoryManagement = () => {
 
   const handleDeleteSubCategory = async (id) => {
     try {
-      // This would be replaced with actual API call
       const response = await deleteSubCategory(id)
       setSubCategories(subCategories.filter((subCat) => subCat._id !== id))
+         toast.success("SubCategory Deleted Successfully...")
     } catch (error) {
       console.error("Error deleting subcategory:", error)
       setError("Failed to delete subcategory. Please try again.")
@@ -109,28 +106,9 @@ const SubCategoryManagement = () => {
       </div>
 
       {error && <div className="p-4 bg-red-50 text-red-700 border-b border-red-100">{error}</div>}
-
+       <ToastContainer/>
       <div className="p-6">
-        {/* Category Filter */}
-        {/* <div className="mb-6">
-          <label htmlFor="categoryFilter" className="block text-sm font-medium text-gray-700 mb-1">
-            Filter by Category
-          </label>
-          <select
-            id="categoryFilter"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div> */}
-
+    
         {/* Add New Sub-Category */}
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-3 text-black">Add New Sub-Category</h3>
@@ -160,7 +138,7 @@ const SubCategoryManagement = () => {
               <button
                 onClick={handleAddSubCategory}
                 disabled={!newSubCategory.trim() || !selectedCategory}
-                className="px-4 py-2 bg-primary-600 text-white rounded-r-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
+                className="px-4 py-2 ml-4 bg-primary-600 text-white rounded-r-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
               >
                 <Plus size={18} className="mr-1" />
                 Add

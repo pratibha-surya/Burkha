@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, Save, X, FolderTree } from "lucide-react"
 import { addCategory, deleteCategory, fetchcategory, updateCategory } from "../api"
+import { toast, ToastContainer } from "react-toastify"
+
+
 
 const CategoryManagement = () => {
-  // const [categories, setCategories] = useState([])
-const [categories, setCategories] = useState([]);
-
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [newCategory, setNewCategory] = useState("")
@@ -20,8 +21,7 @@ const [categories, setCategories] = useState([]);
     const fetchCategories = async () => {
       setLoading(true)
       try {
-        // This would be replaced with actual API call
-        // Simulating API response
+
         const response = await fetchcategory();
         if (response.data) {
           setCategories(response.data)
@@ -39,14 +39,12 @@ const [categories, setCategories] = useState([]);
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return
     try {
-      // This would be replaced with actual API call
-      // Simulating API response
       const newId = (categories.length + 1).toString()
       const response = await addCategory(newCategory);
       const newCategoryObj = response.data
-
-      if (response.data){setCategories([...categories, newCategoryObj])}
+      if (response.data) { setCategories([...categories, newCategoryObj]) }
       setNewCategory("")
+      toast.success("New Category Added successfullly.")
     } catch (error) {
       console.error("Error adding category:", error)
       setError("Failed to add category. Please try again.")
@@ -56,17 +54,17 @@ const [categories, setCategories] = useState([]);
   const handleEditCategory = (category) => {
     setEditingCategory(category._id)
     setEditName(category.name)
+
   }
 
   const handleSaveEdit = async (id) => {
     if (!editName.trim()) return
-
     try {
-      // This would be replaced with actual API call
       const response = await updateCategory(id, editName.trim());
       setCategories(categories.map((cat) => (cat._id === id ? { ...cat, name: editName.trim() } : cat)))
       setEditingCategory(null)
       setEditName("")
+      toast.info("Category Edited Successfully...")
     } catch (error) {
       console.error("Error updating category:", error)
       setError("Failed to update category. Please try again.")
@@ -75,9 +73,9 @@ const [categories, setCategories] = useState([]);
 
   const handleDeleteCategory = async (id) => {
     try {
-      // This would be replaced with actual API call
       const response = await deleteCategory(id);
       setCategories(categories.filter((cat) => cat._id !== id))
+      toast.success("Category Deleted Successfully..")
     } catch (error) {
       console.error("Error deleting category:", error)
       setError("Failed to delete category. Please try again.")
@@ -89,6 +87,7 @@ const [categories, setCategories] = useState([]);
       <div className="px-6 py-4 bg-primary-600 text-white flex items-center">
         <FolderTree className="mr-2" size={24} />
         <h2 className="text-xl font-bold">Category Management</h2>
+        <ToastContainer />
       </div>
 
       {error && <div className="p-4 bg-red-50 text-red-700 border-b border-red-100">{error}</div>}
@@ -108,7 +107,7 @@ const [categories, setCategories] = useState([]);
             <button
               onClick={handleAddCategory}
               disabled={!newCategory.trim()}
-              className="px-4 py-2 bg-primary-600 text-white rounded-r-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
+              className="px-4 ml-4  py-2 bg-primary-600 text-white rounded-r-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
             >
               <Plus size={18} className="mr-1" />
               Add

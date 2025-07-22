@@ -5,7 +5,8 @@ import { addProduct, fetchcategory, fetchSubcategory } from "../api"
 import { CheckCircle, Upload, X } from "lucide-react"
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-
+import { ToastContainer, toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 const CreateProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -20,12 +21,12 @@ const CreateProduct = () => {
     stock: "" // Added stock field
   })
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
-  const [error, setError] = useState("")
+  const [error, seterror] = useState("")
+  const navigate = useNavigate();
 
   // Fetch categories and subcategories
   useEffect(() => {
@@ -38,7 +39,7 @@ const CreateProduct = () => {
         }
       } catch (error) {
         console.error("Error fetching categories:", error)
-        setError("Failed to load categories. Please try again.")
+        seterror("Failed to load categories. Please try again.")
       } finally {
         setLoading(false)
       }
@@ -90,7 +91,7 @@ const CreateProduct = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files)
-    
+
     if (files.length + imageFiles.length > 5) {
       setError("You can upload a maximum of 5 images")
       return
@@ -141,36 +142,41 @@ const CreateProduct = () => {
         productData.append("images", file)
       })
 
-      await addProduct(productData)
-      setSuccess(true)
+      const response = await addProduct(productData)
+      if (response.status === 201) {
+        // Reset form
+        setFormData({
+          name: "",
+          price: "",
+          description: "",
+          color: "",
+          fabric: "",
+          size: [],
+          category: "",
+          subCategory: "",
+          images: [],
+          stock: ""
+        })
+        setImageFiles([])
+        setImagePreviews([])
+        toast.success("Product Created Successfullly...")
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      } else {
+        toast.warn("Product Creattionn Failed, please try again...")
+      }
 
-      // Reset form
-      setFormData({
-        name: "",
-        price: "",
-        description: "",
-        color: "",
-        fabric: "",
-        size: [],
-        category: "",
-        subCategory: "",
-        images: [],
-        stock: "" // Reset stock
-      })
-      setImageFiles([])
-      setImagePreviews([])
-
-      setTimeout(() => setSuccess(false), 3000)
     } catch (error) {
       console.error("Error adding product:", error)
-      setError("Failed to add product. Please try again.")
+      seterror("Failed to add product. Please try again.")
     } finally {
       setLoading(false)
     }
   }
 
   // Filter subcategories based on selected category
-  const filteredSubCategories = formData.category 
+  const filteredSubCategories = formData.category
     ? subCategories.filter(subCat => subCat.category === formData.category)
     : [];
 
@@ -181,17 +187,18 @@ const CreateProduct = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        {error && (
+        {/* {error && (
           <div className="flex items-center justify-center text-red-600 bg-red-50 p-3 rounded-md">
             <X className="mr-2" size={18} />
             <span>{error}</span>
           </div>
-        )}
+        )} */}
+        <ToastContainer />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
 
-            <div>
+          <div>
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
               Category*
             </label>
@@ -288,7 +295,7 @@ const CreateProduct = () => {
           </div>
 
           {/* Category */}
-        
+
 
           {/* Color */}
           <div>
@@ -332,11 +339,10 @@ const CreateProduct = () => {
                 key={size}
                 type="button"
                 onClick={() => handleSizeToggle(size)}
-                className={`px-4 py-2 rounded-md border ${
-                  formData.size.includes(size)
-                    ? "bg-primary-600 text-white border-primary-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
+                className={`px-4 py-2 rounded-md border ${formData.size.includes(size)
+                  ? "bg-primary-600 text-white border-primary-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
               >
                 {size}
               </button>
@@ -356,7 +362,7 @@ const CreateProduct = () => {
               onChange={handleDescriptionChange}
               config={{
                 toolbar: [
-                  'heading', '|', 
+                  'heading', '|',
                   'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
                   'blockQuote', 'insertTable', 'undo', 'redo'
                 ]
@@ -400,8 +406,8 @@ const CreateProduct = () => {
                 <span className="text-primary-600 underline ml-1">browse</span>
               </span>
               <span className="text-xs text-gray-500">
-                {imageFiles.length >= 5 
-                  ? 'Maximum 5 images reached' 
+                {imageFiles.length >= 5
+                  ? 'Maximum 5 images reached'
                   : `Upload up to 5 images (${imageFiles.length}/5)`
                 }
               </span>
@@ -418,6 +424,7 @@ const CreateProduct = () => {
           </label>
         </div>
 
+
         {/* Submit Button */}
         <div>
           <button
@@ -429,12 +436,15 @@ const CreateProduct = () => {
           </button>
         </div>
 
-        {success && (
+
+        {/* {success && (
           <div className="flex items-center justify-center text-green-600 bg-green-50 p-3 rounded-md">
             <CheckCircle className="mr-2" size={18} />
             <span>Product added successfully!</span>
           </div>
-        )}
+        )} */}
+
+
       </form>
     </div>
   )

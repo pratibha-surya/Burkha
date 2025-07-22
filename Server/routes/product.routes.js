@@ -13,7 +13,7 @@ router.delete('/:id', deleteProduct);
 router.get('/:id', getProductById);
 router.get('/category/:id',getCoursesByCategory);
 router.put("/:id/home-visibility",getproducthome)
-// router.put("/:id/home-visibility",getAllProductshome)
+
 
 
 

@@ -1,7 +1,5 @@
 
 
-
-
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import {
   Home,
@@ -102,96 +100,96 @@ function AppContent({ onLogout }) {
   };
 
   const navItems = [
-      {
-        to: "/dashboard",
-        label: "Dashboard",
-        icon: BarChart2,
-      },
+    {
+      to: "/dashboard",
+      label: "Dashboard",
+      icon: BarChart2,
+    },
 
-      {
-        label: "Master",
-        icon: Layers,
-        subItems: [
-          { to: "/categories", label: "All Categories", icon: List },
-          { to: "/subcategories", label: "Sub-Categories", icon: Grid },
-          { to: "/create", label: "Add Product", icon: PlusCircle },
-        ],
-      },
+    {
+      label: "Master",
+      icon: Layers,
+      subItems: [
+        { to: "/categories", label: "All Categories", icon: List },
+        { to: "/subcategories", label: "Sub-Categories", icon: Grid },
+        { to: "/create", label: "Add Product", icon: PlusCircle },
+      ],
+    },
 
-      {
-        label: "View Products",
-        icon: Package,
-        subItems: [
-          { to: "/", label: "All Products", icon: Home },
+    {
+      label: "View Products",
+      icon: Package,
+      subItems: [
+        { to: "/", label: "All Products", icon: Home },
 
-        ],
-      },
-
-
-
-      {
-        label: "Orders",
-        icon: Package,
-        subItems: [
-          { to: "/todayorder", label: "Today Order", icon: ClipboardList },
-          { to: "/orders", label: "Total Orders", icon: ClipboardList },
-          { to: "/deliverorder", label: "Dispatch Order", icon: Truck },
-          { to: "/shippedorderdisplay", label: "Shipped Orders", icon: QrCode },
-          { to: "/cancelorder", label: "Cancel Order", icon: QrCode },
-        ],
-      },
-
-
-      {
-        label: "Stock-in",
-        icon: Package,
-        subItems: [
-          {to:"/purchasescan", label:"purchaseStock", icon:QrCode},
-         
-
-
-        ],
-      },
-        
-
-      
+      ],
+    },
 
 
 
-      {
-        label: "Billing",
-        icon: Package,
-        subItems: [
-          // { to: "/scan", label: "Scan QR", icon: QrCode },
-          { to: "/purchaseScanQRCode", label: "Scan QR", icon: QrCode },
-
-          { to: "/invoice", label: "All Invoices", icon: ClipboardList },
-
-        ],
-      },
-
-
-
-      {
-        label: "Registration",
-        icon: Layers,
-        subItems: [
-          { to: "/registration", label: "Registration", icon: UserPlus },
-
-      
-          {to:"/contactdisplay", label:"Contact", icon:QrCode},
-                  // {to:"/brand", label:"Brand", icon:QrCode},
-                  // {to:"/branddisplay", label:"Brandshow", icon:QrCode},
-                   {to:"/registrationvendor", label:"registrationvendor", icon:Home}
-        ],
-      },
+    {
+      label: "Orders",
+      icon: Package,
+      subItems: [
+        { to: "/todayorder", label: "Today Order", icon: ClipboardList },
+        { to: "/orders", label: "Total Orders", icon: ClipboardList },
+        { to: "/deliverorder", label: "Dispatch Order", icon: Truck },
+        { to: "/shippedorderdisplay", label: "Shipped Orders", icon: QrCode },
+        { to: "/cancelorder", label: "Cancel Order", icon: QrCode },
+      ],
+    },
 
 
-      
+    {
+      label: "Stock-in",
+      icon: Package,
+      subItems: [
+        { to: "/purchasescan", label: "purchaseStock", icon: QrCode },
 
 
 
-    ];
+      ],
+    },
+
+
+
+
+
+
+    {
+      label: "Billing",
+      icon: Package,
+      subItems: [
+        // { to: "/scan", label: "Scan QR", icon: QrCode },
+        { to: "/purchaseScanQRCode", label: "Scan QR", icon: QrCode },
+
+        { to: "/invoice", label: "All Invoices", icon: ClipboardList },
+
+      ],
+    },
+
+
+
+    {
+      label: "Registration",
+      icon: Layers,
+      subItems: [
+        { to: "/registration", label: "Registration", icon: UserPlus },
+
+
+        { to: "/contactdisplay", label: "Contact", icon: QrCode },
+        // {to:"/brand", label:"Brand", icon:QrCode},
+        // {to:"/branddisplay", label:"Brandshow", icon:QrCode},
+        { to: "/registrationvendor", label: "registrationvendor", icon: Home }
+      ],
+    },
+
+
+
+
+
+
+  ];
   return (
     <div className="min-h-screen w-[100vw] flex bg-gray-50">
       <div className="hidden md:block buttons">
@@ -247,7 +245,7 @@ function AppContent({ onLogout }) {
                   <span className="text-sm hidden buttons lg:inline">Logout</span>
                 </button>
 
-              <NavLink
+                <NavLink
                   to="/cart"
                   className={({ isActive }) =>
                     isActive
@@ -262,7 +260,7 @@ function AppContent({ onLogout }) {
                     </span>
                   )}
                 </NavLink>
-                </div>
+              </div>
             </div>
           </div>
 
@@ -276,11 +274,10 @@ function AppContent({ onLogout }) {
                       <div key={item.label} className="mb-1">
                         <button
                           onClick={() => toggleDropdown(item.label)}
-                          className={`w-full flex items-center justify-between px-3 py-3 rounded-md text-sm font-medium ${
-                            openDropdown === item.label
-                              ? "bg-blue-50 text-blue-600"
-                              : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                          }`}
+                          className={`w-full flex items-center justify-between px-3 py-3 rounded-md text-sm font-medium ${openDropdown === item.label
+                            ? "bg-blue-50 text-blue-600"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                            }`}
                         >
                           <div className="flex items-center">
                             <item.icon className="w-5 h-5 mr-3" />
@@ -300,10 +297,9 @@ function AppContent({ onLogout }) {
                                 to={subItem.to}
                                 onClick={() => setMobileMenuOpen(false)}
                                 className={({ isActive }) =>
-                                  `flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                                    isActive
-                                      ? "bg-blue-100 text-blue-600"
-                                      : "text-gray-600 hover:bg-gray-50 hover:text-blue-600"
+                                  `flex items-center px-3 py-2 rounded-md text-sm font-medium ${isActive
+                                    ? "bg-blue-100 text-blue-600"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-blue-600"
                                   }`
                                 }
                               >
@@ -322,10 +318,9 @@ function AppContent({ onLogout }) {
                       to={item.to}
                       onClick={() => setMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center px-3 py-3 rounded-md text-sm font-medium ${
-                          isActive
-                            ? "bg-blue-50 text-blue-600"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                        `flex items-center px-3 py-3 rounded-md text-sm font-medium ${isActive
+                          ? "bg-blue-50 text-blue-600"
+                          : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                         }`
                       }
                     >
@@ -353,7 +348,7 @@ function AppContent({ onLogout }) {
                 </button>
               </div>
             </div>
-           
+
           )}
         </header>
 
@@ -382,19 +377,16 @@ function AppContent({ onLogout }) {
               <Route path="/deliverorder" element={<DeliveredOrder />} />
               <Route path="/shippedorderdisplay" element={<ShippedOrdersDisplay />} />
               <Route path="/cancelorder" element={<CancelledOrders />} />
-              <Route path="/invoice" element={<Invoice/>} />
-              <Route path="/purchasescan" element={<PurchaseScanstocks/>}/>
-              <Route path="/cardcompoenent" element={<ChartComponent/>}/>
-              <Route path="/contactdisplay" element={<ContactDisplay/>}/>
-              <Route path="/banner" element={<Banner/>}/>
-              <Route path="/bannerdisplay" element={<Bannerdisplay/>}/>
-              <Route path="/customer" element={<Customer/>}/>
-            <Route path="/vendordetails/:id" element={<AllDetail/>} />
-            <Route path="/vendor/:id" element={<VendorDetail/>}/>
-            <Route path="/registrationvendor" element={<RegistrationVendor/>}/>
-
-
-
+              <Route path="/invoice" element={<Invoice />} />
+              <Route path="/purchasescan" element={<PurchaseScanstocks />} />
+              <Route path="/cardcompoenent" element={<ChartComponent />} />
+              <Route path="/contactdisplay" element={<ContactDisplay />} />
+              <Route path="/banner" element={<Banner />} />
+              <Route path="/bannerdisplay" element={<Bannerdisplay />} />
+              <Route path="/customer" element={<Customer />} />
+              <Route path="/vendordetails/:id" element={<AllDetail />} />
+              <Route path="/vendor/:id" element={<VendorDetail />} />
+              <Route path="/registrationvendor" element={<RegistrationVendor />} />
             </Routes>
           </div>
         </main>

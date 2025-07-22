@@ -205,6 +205,7 @@ const createProduct = async (req, res) => {
     }
 };
 
+
 // Update a product
 const updateProduct = async (req, res) => {
     try {
@@ -255,6 +256,11 @@ const updateProduct = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+
+
+
 
 // Purchase a product
 const purchaseProduct = async (req, res) => {

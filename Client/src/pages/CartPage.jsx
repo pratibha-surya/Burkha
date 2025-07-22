@@ -6,6 +6,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ToastContainer, toast } from 'react-toastify';
+import {useNavigate} from "react-router-dom"
 
 import {
   Trash2,
@@ -32,6 +33,8 @@ const CartPage = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
+     const navigate = useNavigate();
+  
 
   useEffect(() => {
     const initial = {};
@@ -158,9 +161,8 @@ const CartPage = () => {
   const handlePayment = async () => {
     setProcessingPayment(true);
     setError(null);
-
     const vendor = vendors.find(v => v._id === selectedVendor);
-    
+  
     const payload = {
       orderItems: cart
         .filter(item => item.product)
@@ -210,7 +212,8 @@ const CartPage = () => {
     } catch (err) {
       console.error("Payment error:", err);
       setError(err.response?.data?.message || "you cross the limit.");
-      toast.error("You cross the limit");
+      // toast.error("You cross the limit");
+      toast.error(err.response?.data?.response)
     } finally {
       setProcessingPayment(false);
     }
@@ -235,7 +238,10 @@ const CartPage = () => {
           <ShoppingCart className="h-16 w-16 text-gray-400 mb-4" />
           <p className="text-lg text-gray-500 mb-2">Your cart is empty</p>
           <p className="text-gray-400 text-sm mb-4">Add some products to get started</p>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+          <button  onClick={()=>{
+                navigate("/");
+             
+          }} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
             Continue Shopping
           </button>
         </div>
