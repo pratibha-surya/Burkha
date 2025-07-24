@@ -11,6 +11,7 @@ const {
   getAllProductshome,
   getproducthome,
   NewUpdateProduct,
+  removeImageFromProduct,
 } = require("../controllers/product.controller");
 
 const router = express.Router();
@@ -20,6 +21,8 @@ router.get("/", getAllProducts);
 router.post("/", createProduct);
 router.put("/purchase", purchaseProduct);
 router.get("/allproduct", getAllProductshome);
+router.put("/remove-image/:productId", removeImageFromProduct);
+
 router.put("/update/:id", NewUpdateProduct);
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);

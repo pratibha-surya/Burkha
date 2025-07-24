@@ -159,78 +159,78 @@ const createProduct = async (req, res) => {
 };
 
 // Update a product
-const updateProduct = async (req, res) => {
-  console.log(req.body, "product update");
+// const updateProduct = async (req, res) => {
+//   console.log(req.body, "product update");
 
-  try {
-    const {
-      name,
-      price,
-      description,
-      color,
-      fabric,
-      size,
-      category,
-      subCategory,
-      images,
-      stock,
-      barcodeNumber,
-    } = req.body;
-    const parsedSize = size
-      ? typeof size === "string"
-        ? JSON.parse(size)
-        : size
-      : undefined;
+//   try {
+//     const {
+//       name,
+//       price,
+//       description,
+//       color,
+//       fabric,
+//       size,
+//       category,
+//       subCategory,
+//       images,
+//       stock,
+//       barcodeNumber,
+//     } = req.body;
+//     const parsedSize = size
+//       ? typeof size === "string"
+//         ? JSON.parse(size)
+//         : size
+//       : undefined;
 
-    // If barcodeNumber is provided, ensure it's unique
-    if (barcodeNumber) {
-      const existingProduct = await Product.findOne({
-        barcodeNumber,
-        _id: { $ne: req.params.id },
-      });
-      if (existingProduct) {
-        return res
-          .status(400)
-          .json({ message: "Barcode number already in use" });
-      }
-    }
+//     // If barcodeNumber is provided, ensure it's unique
+//     if (barcodeNumber) {
+//       const existingProduct = await Product.findOne({
+//         barcodeNumber,
+//         _id: { $ne: req.params.id },
+//       });
+//       if (existingProduct) {
+//         return res
+//           .status(400)
+//           .json({ message: "Barcode number already in use" });
+//       }
+//     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      {
-        name,
-        price,
-        description,
-        color,
-        fabric,
-        size: parsedSize,
-        category,
-        subCategory,
-        images,
-        stock,
-        barcodeNumber,
-      },
-      { new: true }
-    ).populate("category subCategory");
+//     const updatedProduct = await Product.findByIdAndUpdate(
+//       req.params.id,
+//       {
+//         name,
+//         price,
+//         description,
+//         color,
+//         fabric,
+//         size: parsedSize,
+//         category,
+//         subCategory,
+//         images,
+//         stock,
+//         barcodeNumber,
+//       },
+//       { new: true }
+//     ).populate("category subCategory");
 
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
-    }
+//     if (!updatedProduct) {
+//       return res.status(404).json({ message: "Product not found" });
+//     }
 
-    // Regenerate barcode image if barcodeNumber changed
-    if (barcodeNumber && barcodeNumber !== updatedProduct.barcodeNumber) {
-      const barcodeImage = await generateBarcode(barcodeNumber);
-      updatedProduct.barcode = barcodeImage;
-      await updatedProduct.save();
-    }
+//     // Regenerate barcode image if barcodeNumber changed
+//     if (barcodeNumber && barcodeNumber !== updatedProduct.barcodeNumber) {
+//       const barcodeImage = await generateBarcode(barcodeNumber);
+//       updatedProduct.barcode = barcodeImage;
+//       await updatedProduct.save();
+//     }
 
-    console.log("Product updated:", updatedProduct);
-    res.status(200).json(updatedProduct);
-  } catch (error) {
-    console.error("Error updating product:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
+//     // console.log("Product updated:", updatedProduct);
+//     res.status(200).json(updatedProduct);
+//   } catch (error) {
+//     console.error("Error updating product:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 // Purchase a product
 const purchaseProduct = async (req, res) => {
@@ -379,6 +379,161 @@ const NewUpdateProduct = async (req, res) => {
   }
 };
 
+const updateProduct = async (req, res) => {
+  console.log("BODY:", req.body);
+  console.log("FILES:", req.files);
+
+  try {
+    const {
+      name,
+      price,
+      description,
+      color,
+      fabric,
+      size,
+      category,
+      subCategory,
+      stock,
+      barcodeNumber,
+    } = req.body;
+
+    const parsedSize = size
+      ? typeof size === "string"
+        ? JSON.parse(size)
+        : size
+      : undefined;
+
+    const keptOldImages = req.body.existingImages
+      ? JSON.parse(req.body.existingImages)
+      : [];
+
+    let newImageURLs = [];
+
+    if (req.files && req.files.images) {
+      const filesArray = Array.isArray(req.files.images)
+        ? req.files.images
+        : [req.files.images];
+
+      for (const file of filesArray) {
+        const uploaded = await imagekit.upload({
+          file: file.data, // buffer
+          fileName: file.name,
+          folder: "products",
+        });
+        newImageURLs.push(uploaded.url);
+      }
+    }
+
+    const mergedImages = [...keptOldImages, ...newImageURLs];
+
+    if (barcodeNumber) {
+      const existingProduct = await Product.findOne({
+        barcodeNumber,
+        _id: { $ne: req.params.id },
+      });
+      if (existingProduct) {
+        return res
+          .status(400)
+          .json({ message: "Barcode number already in use" });
+      }
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        price,
+        description,
+        color,
+        fabric,
+        size: parsedSize,
+        category,
+        subCategory,
+        stock,
+        barcodeNumber,
+        images: mergedImages,
+      },
+      { new: true }
+    ).populate("category subCategory");
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.status(200).json(updatedProduct);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ! remove image
+const removeImageFromProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { imageUrl } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({ message: "Image URL is required" });
+    }
+
+    // Find the product
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Filter out the image URL
+    product.images = product.images.filter((url) => url !== imageUrl);
+
+    // Save updated product
+    await product.save();
+
+    res.status(200).json({
+      message: "Image removed successfully",
+      product,
+    });
+  } catch (error) {
+    console.error("Error removing image:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ! remove image from imagekit
+
+// const removeImageFromProduct = async (req, res) => {
+//   try {
+//     const { productId } = req.params;
+//     const { fileId } = req.body;
+
+//     if (!fileId) {
+//       return res.status(400).json({ message: "fileId is required" });
+//     }
+
+//     const product = await Product.findById(productId);
+//     if (!product) {
+//       return res.status(404).json({ message: "Product not found" });
+//     }
+
+//     // Filter out the image with the given fileId
+//     product.images = product.images.filter(img => img.fileId !== fileId);
+
+//     // Delete from ImageKit
+//     await imagekit.deleteFile(fileId);
+
+//     await product.save();
+
+//     res.status(200).json({
+//       message: "Image removed from DB and ImageKit",
+//       product,
+//     });
+
+//   } catch (error) {
+//     console.error("Error removing image:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 module.exports = {
   getAllProducts,
   getProductById,
@@ -391,4 +546,5 @@ module.exports = {
   getAllProductshome,
   getproducthome,
   NewUpdateProduct,
+  removeImageFromProduct,
 };
