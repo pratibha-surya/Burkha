@@ -33,6 +33,9 @@ const ProductList = () => {
   const [addingToCart, setAddingToCart] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+
   const [editFormData, setEditFormData] = useState({
     name: "",
     price: "",
@@ -99,6 +102,8 @@ const ProductList = () => {
       // new files
       images.forEach((f) => formData.append("images", f));
 
+      setIsSaving(true);
+
       const res = await axios.put(
         `${import.meta.env.VITE_API_URL}/product/${id}`,
         formData,
@@ -108,6 +113,8 @@ const ProductList = () => {
     } catch (e) {
       console.error(e);
       return null;
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -115,59 +122,67 @@ const ProductList = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      name: editFormData.name,
-      price: Number(editFormData.price),
-      mrp: Number(editFormData.mrp),
-      description: editFormData.description,
-      color: editFormData.color,
-      fabric: editFormData.fabric,
-      size: editFormData.size,
-      stock: Number(editFormData.stock),
-      homeVisibility: editFormData.homeVisibility,
-      category: editFormData.category._id, // ✅ ID bhejo
-      subCategory: editFormData.subCategory._id, // ✅ ID bhejo
-    };
+    setIsSaving(true);
 
-    const oldKept = editFormData.existingImages;
+    try {
+      const payload = {
+        name: editFormData.name,
+        price: Number(editFormData.price),
+        mrp: Number(editFormData.mrp),
+        description: editFormData.description,
+        color: editFormData.color,
+        fabric: editFormData.fabric,
+        size: editFormData.size,
+        stock: Number(editFormData.stock),
+        homeVisibility: editFormData.homeVisibility,
+        category: editFormData.category._id, // ✅ ID bhejo
+        subCategory: editFormData.subCategory._id, // ✅ ID bhejo
+      };
 
-    const updated = await updateProduct(
-      editingProduct._id,
-      payload,
-      newImages,
-      oldKept
-    );
+      const oldKept = editFormData.existingImages;
 
-    if (updated) {
+      const updated = await updateProduct(
+        editingProduct._id,
+        payload,
+        newImages,
+        oldKept
+      );
+
       if (updated) {
-        setEditingProduct(null);
-        setNewImages([]);
-        setEditFormData({
-          name: "",
-          price: "",
-          mrp: "",
-          description: "",
-          color: "",
-          fabric: "",
-          size: [],
-          category: "",
-          subCategory: "",
-          stock: "",
-          homeVisibility: false,
-          existingImages: [],
-        });
+        if (updated) {
+          setEditingProduct(null);
+          setNewImages([]);
+          setEditFormData({
+            name: "",
+            price: "",
+            mrp: "",
+            description: "",
+            color: "",
+            fabric: "",
+            size: [],
+            category: "",
+            subCategory: "",
+            stock: "",
+            homeVisibility: false,
+            existingImages: [],
+          });
 
-        setProducts((prev) =>
-          prev.map((p) => (p._id === updated._id ? updated : p))
-        );
-        setEditingProduct(null); // ✅ Ab tumhara edit form fresh populated hoga!
-        toast.success("Product edited successfully!");
-        navigate("/");
+          setProducts((prev) =>
+            prev.map((p) => (p._id === updated._id ? updated : p))
+          );
+          setEditingProduct(null); // ✅ Ab tumhara edit form fresh populated hoga!
+          toast.success("Product edited successfully!");
+          navigate("/");
+        } else {
+          toast.warn("Error updating product");
+        }
       } else {
         toast.warn("Error updating product");
       }
-    } else {
-      toast.warn("Error updating product");
+    } catch (error) {
+      toast.error("Failed to update product");
+    } finally {
+      setIsSaving(false); // Set loading state to false when done
     }
   };
 
@@ -372,6 +387,43 @@ const ProductList = () => {
     });
   };
 
+  const handleRemoveImage = async (imageUrl) => {
+    try {
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_URL}/product/remove-image/${
+          editingProduct._id
+        }`,
+        { imageUrl }
+      );
+
+      if (res.status === 200) {
+        toast.success("Image removed successfully");
+
+        // ✅ Correct: BOTH arrays updated
+        setEditingProduct((prev) => ({
+          ...prev,
+          images: (prev?.images || []).filter((img) => img !== imageUrl),
+          existingImages: (prev?.existingImages || []).filter(
+            (img) => img !== imageUrl
+          ),
+        }));
+
+        setEditFormData((prev) => ({
+          ...prev,
+          images: (prev?.images || []).filter((img) => img !== imageUrl),
+          existingImages: (prev?.existingImages || []).filter(
+            (img) => img !== imageUrl
+          ),
+        }));
+      } else {
+        toast.error("Could not remove image");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    }
+  };
+
   return (
     <div className='bg-white shadow rounded-lg max-w-5xl py-8'>
       {/* PRINT DIALOG */}
@@ -511,7 +563,6 @@ const ProductList = () => {
 
                     <button
                       onClick={() => {
-                        console.log(product, "Product");
                         setEditingProduct(product); // as trigger
                         setEditFormData({
                           name: product.name || "",
@@ -734,9 +785,6 @@ const ProductList = () => {
             <div className='p-6'>
               <div className='flex justify-between items-center mb-4'>
                 <h2 className='text-2xl font-bold'>Edit Product</h2>
-                {/* <button onClick={() => setEditingProduct(null)}>
-                  <X size={24} />
-                </button> */}
                 <button onClick={handleEditModalClose}>
                   <X size={24} />
                 </button>
@@ -750,24 +798,16 @@ const ProductList = () => {
 
                 {/* Existing images */}
                 <div className='flex flex-wrap gap-4 mb-4'>
-                  {editingProduct.existingImages?.map((url, index) => (
+                  {editingProduct?.images?.map((url, index) => (
                     <div key={`existing-${index}`} className='relative group'>
                       <img
                         src={url}
-                        alt={`existing-${index}`}
+                        alt=''
                         className='h-24 w-24 object-cover rounded-md border'
                       />
                       <button
                         type='button'
-                        onClick={() => {
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            images: prev.images.filter((_, i) => i !== index),
-                            existingImages: prev.existingImages.filter(
-                              (_, i) => i !== index
-                            ),
-                          }));
-                        }}
+                        onClick={() => handleRemoveImage(url)}
                         className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-80 hover:opacity-100 transition-opacity'
                       >
                         <X size={14} />
@@ -805,7 +845,9 @@ const ProductList = () => {
                 {/* Upload area */}
                 <label
                   className={`flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-primary-500 ${
-                    (editingProduct.images?.length || 0) + newImages.length >= 5
+                    (editingProduct?.existingImages?.length || 0) +
+                      newImages.length >=
+                    5
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                   }`}
@@ -817,12 +859,12 @@ const ProductList = () => {
                       <span className='text-primary-600 underline'>browse</span>
                     </span>
                     <span className='text-xs text-gray-500'>
-                      {(editingProduct.images?.length || 0) +
+                      {(editingProduct?.existingImages?.length || 0) +
                         newImages.length >=
                       5
                         ? "Maximum 5 images"
                         : `Up to 5 images (${
-                            (editingProduct.images?.length || 0) +
+                            (editingProduct?.existingImages?.length || 0) +
                             newImages.length
                           }/5)`}
                     </span>
@@ -834,7 +876,7 @@ const ProductList = () => {
                     onChange={(e) => {
                       const files = Array.from(e.target.files);
                       const total =
-                        (editingProduct.images?.length || 0) +
+                        (editingProduct?.existingImages?.length || 0) +
                         newImages.length +
                         files.length;
 
@@ -847,7 +889,8 @@ const ProductList = () => {
                     }}
                     className='hidden'
                     disabled={
-                      (editingProduct.images?.length || 0) + newImages.length >=
+                      (editingProduct?.existingImages?.length || 0) +
+                        newImages.length >=
                       5
                     }
                   />
@@ -864,7 +907,10 @@ const ProductList = () => {
                     type='text'
                     value={editFormData.name || ""}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, name: e.target.value })
+                      setEditFormData({
+                        ...editFormData,
+                        name: e.target.value,
+                      })
                     }
                     className='w-full border rounded px-3 py-2'
                     required
@@ -1032,15 +1078,24 @@ const ProductList = () => {
                 <div className='flex gap-3 mt-4'>
                   <button
                     type='submit'
-                    className='flex-1 bg-primary-600 text-white py-2 rounded'
+                    className='flex-1 bg-primary-600 text-white py-2 rounded flex items-center justify-center'
+                    disabled={isSaving}
                   >
-                    Save Changes
+                    {isSaving ? (
+                      <>
+                        <RefreshCw size={18} className='animate-spin mr-2' />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </button>
                   <button
                     type='button'
                     // onClick={() => setEditingProduct(null)}
                     onClick={handleEditModalClose}
                     className='bg-gray-200 text-gray-800 py-2 px-4 rounded'
+                    disabled={isSaving}
                   >
                     Cancel
                   </button>
