@@ -23,10 +23,11 @@ const TodayOrders = () => {
     try {
       setLoading(true);
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/order`);
+      console.log("Today orders response:", res.data);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const todaysOrders = res.data.orders.filter((order) => {
+      const todaysOrders = (res.data.orders || []).filter((order) => {
         const orderDate = new Date(order.createdAt);
         return orderDate >= today;
       });
@@ -36,6 +37,8 @@ const TodayOrders = () => {
       calculateTodaysTotals(todaysOrders);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
+      setOrders([]);
+      setFilteredOrders([]);
     } finally {
       setLoading(false);
     }

@@ -10,7 +10,7 @@ const BrandDisplay = () => {
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
 
-  const apiUrl = ' http://localhost:8080/brand/display';
+  const apiUrl = 'http://localhost:8080/brand/display';
 
 
   console.log(brands,'sdfgh')

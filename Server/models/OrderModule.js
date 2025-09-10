@@ -6,6 +6,7 @@ dueAmount: Number,
 totalPriceAfterDiscount: Number,
 paymentStatus: String,
 
+
 });
 
 module.exports = mongoose.model('Orders', orderSchema);

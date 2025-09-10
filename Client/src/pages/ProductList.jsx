@@ -14,6 +14,7 @@ import {
   X,
   Home,
   Upload,
+  Tag,
 } from "lucide-react";
 import { useCart } from "../CartContext";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +23,10 @@ import { ToastContainer, toast } from "react-toastify";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { MdSummarize } from "react-icons/md";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ProductList = () => {
   /* ------------- STATE ------------- */
@@ -424,6 +429,44 @@ const ProductList = () => {
     }
   };
 
+    const exportToExcel = () => {
+      const ws = XLSX.utils.json_to_sheet(
+        state.filteredOrders.map(o => ({
+          OrderID: o._id,
+          Date: new Date(o.createdAt).toLocaleDateString(),
+          Vendor: o.orderItems[0]?.discountName?.firmName || "N/A",
+          Total: o.totalPriceAfterDiscount ?? o.totalPrice,
+          Paid: o.paidAmount || 0,
+          Due: o.dueAmount ?? (o.totalPriceAfterDiscount ?? o.totalPrice) - (o.paidAmount || 0),
+          PaymentStatus: o.paymentStatus?.toUpperCase(),
+          Status: o.status?.toUpperCase()
+        }))
+      );
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Orders");
+      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      saveAs(new Blob([wbout], { type: "application/octet-stream" }), "orders.xlsx");
+    };
+  
+    // ✅ PDF export using autoTable properly
+    const exportToPDF = () => {
+      const doc = new jsPDF();
+      doc.text("Orders Report", 14, 15);
+      const tableColumn = ["Order ID", "Date", "Vendor", "Total", "Paid", "Due", "Payment Status", "Status"];
+      const tableRows = state.filteredOrders.map(o => [
+        o._id.slice(-6).toUpperCase(),
+        new Date(o.createdAt).toLocaleDateString(),
+        o.orderItems[0]?.discountName?.firmName || "N/A",
+        o.totalPriceAfterDiscount ?? o.totalPrice,
+        o.paidAmount || 0,
+        o.dueAmount ?? (o.totalPriceAfterDiscount ?? o.totalPrice) - (o.paidAmount || 0),
+        o.paymentStatus?.toUpperCase(),
+        o.status?.toUpperCase()
+      ]);
+  
+      autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
+      doc.save("orders.pdf");
+    };
   return (
     <div className='bg-white shadow rounded-lg max-w-5xl py-8'>
       {/* PRINT DIALOG */}
@@ -514,127 +557,167 @@ const ProductList = () => {
         </div>
       ) : (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-          {filteredProducts.map((product) => (
+            {filteredProducts.map((product) => (
             <div
               key={product._id}
-              className='border rounded-lg overflow-hidden hover:shadow'
+              className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
             >
-              <div className='h-48 bg-gray-100 flex items-center justify-center relative'>
-                {product.images?.length ? (
-                  <img
-                    src={product.images[0]}
-                    className='h-full object-contain'
-                    alt={product.name}
-                  />
-                ) : (
-                  <Package size={48} className='text-gray-400' />
-                )}
-                {product.mrp > product.price && (
-                  <span className='absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded'>
-                    {Math.round(
-                      ((product.mrp - product.price) / product.mrp) * 100
-                    )}
-                    % OFF
-                  </span>
+              <div className="relative">
+                <div className="h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      src={product.images[0] || "/placeholder.svg"}
+                      alt={product.name}
+                      className="h-[100%]"
+                    />
+                  ) : (
+                    <div className="text-gray-400 flex flex-col items-center">
+                      <Package size={48} />
+                      <span className="text-sm mt-2">No image</span>
+                    </div>
+                  )}
+                </div>
+
+                {product.mrp && product.price && product.mrp > product.price && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% OFF
+                  </div>
                 )}
               </div>
-              <div className='p-4'>
-                <div className='flex justify-between items-start mb-2'>
-                  <div className='flex gap-1'>
+
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex space-x-1">
                     <button
-                      disabled={product.stock <= 0 || addingToCart[product._id]}
-                      onClick={() => handleAddToCartClick(product)}
                       className={`p-1.5 rounded-full ${
-                        product.stock <= 0 ? "bg-gray-200" : "bg-primary-50"
+                        product.stock <= 0
+                          ? "bg-gray-200 cursor-not-allowed"
+                          : addingToCart[product._id]
+                          ? "bg-gray-200"
+                          : "bg-primary-50 hover:bg-primary-100"
                       }`}
+                      onClick={() => handleAddToCartClick(product)}
+                      disabled={product.stock <= 0 || addingToCart[product._id]}
+                      title={product.stock <= 0 ? "Out of Stock" : "Add to cart"}
                     >
                       {addingToCart[product._id] ? (
-                        <RefreshCw size={16} className='animate-spin' />
+                        <RefreshCw size={16} className="text-primary-600 animate-spin" />
                       ) : (
-                        <ShoppingCart size={16} />
+                        <ShoppingCart size={16} className={product.stock <= 0 ? "text-gray-400" : "text-primary-600"} />
                       )}
                     </button>
                     <button
+                      className="p-1.5 rounded-full bg-green-50 hover:bg-green-100"
                       onClick={() => handlePrintProduct(product)}
-                      className='p-1.5 rounded-full bg-green-50'
+                      title="Print product details"
                     >
-                      <Printer size={16} />
+                      <Printer size={16} className="text-green-600" />
                     </button>
-
                     <button
-                      onClick={() => {
-                        setEditingProduct(product); // as trigger
-                        setEditFormData({
-                          name: product.name || "",
-                          price: product.price ?? "",
-                          mrp: product.mrp ?? "",
-                          description: product.description || "",
-                          color: product.color || "",
-                          fabric: product.fabric || "",
-                          size: Array.isArray(product.size) ? product.size : [],
-                          category: product.category?._id || "",
-                          subCategory: product.subCategory?._id || "",
-                          stock: product.stock ?? 0,
-                          homeVisibility: Boolean(product.homeVisibility),
-                          images: Array.isArray(product.images)
-                            ? [...product.images]
-                            : [],
-                          existingImages: Array.isArray(product.images)
-                            ? [...product.images]
-                            : [],
-                        });
-                        setNewImages([]);
-                      }}
-                      className='p-1.5 rounded-full bg-yellow-50'
+                      className="p-1.5 rounded-full bg-yellow-50 hover:bg-yellow-100"
+                      onClick={() => setEditingProduct(product)}
+                      title="Edit product"
                     >
-                      <Edit size={16} />
+                      <Edit size={16} className="text-yellow-600" />
                     </button>
-
                     <button
+                      className="p-1.5 rounded-full bg-red-50 hover:bg-red-100"
                       onClick={() => deleteP(product._id)}
-                      className='p-1.5 rounded-full bg-red-50'
+                      title="Delete product"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={16} className="text-red-600" />
                     </button>
                     <button
+                      className="p-1.5 rounded-full bg-blue-50 hover:bg-blue-100"
                       onClick={() => setSelectedProduct(product)}
-                      className='p-1.5 rounded-full bg-blue-50'
+                      title="View details"
                     >
-                      <Info size={16} />
+                      <Info size={16} className="text-blue-600" />
                     </button>
                   </div>
                   <button
-                    onClick={() => toggleHomeVisibility(product._id)}
+                    onClick={() => toggleHomeVisibility(product._id, product.homeVisibility)}
                     className={`p-1.5 rounded-full ${
-                      product.homeVisibility ? "bg-purple-100" : "bg-gray-100"
+                      product.homeVisibility
+                        ? "bg-purple-100 hover:bg-purple-200 text-purple-600"
+                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                     }`}
+                    title={product.homeVisibility === "true" ? "Visible on home" : "Hidden from home"}
                   >
                     <Home size={16} />
                   </button>
                 </div>
-                <h3 className='font-medium text-lg'>{product.name}</h3>
-                <div className='flex items-baseline mb-2'>
-                  <span className='text-primary-600 font-bold'>
-                    ₹{Number(product.price).toFixed(2)}
+                <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
+                <div className="flex items-baseline mb-2">
+                  <span className="text-primary-600 font-bold text-lg">
+                    ₹{Number.parseFloat(product.price).toFixed(2)}
                   </span>
-                  {product.mrp > product.price && (
-                    <span className='ml-2 text-sm text-gray-500 line-through'>
-                      ₹{Number(product.mrp).toFixed(2)}
+                  {product.mrp && product.mrp > product.price && (
+                    <span className="ml-2 text-gray-500 text-sm line-through">
+                      ₹{Number.parseFloat(product.mrp).toFixed(2)}
                     </span>
                   )}
                 </div>
-                <div className='mb-2'>
+
+                <div className="mb-2">
                   {product.stock > 0 ? (
-                    <span className='inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800'>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 animate-pulse">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-ping"></span>
                       {product.stock} in Stock
                     </span>
                   ) : (
-                    <span className='inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800'>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
                       Sold Out
                     </span>
                   )}
                 </div>
+
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {product.category && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 text-black">
+                      <Tag size={12} className="mr-1" />
+                      {product.category.name}
+                    </span>
+                  )}
+
+                  {product.size && product.size.length > 0 && (
+                    <div className="flex gap-1 ml-auto">
+                      {product.size.map((size) => (
+                        <span key={size} className="inline-block px-1.5 py-0.5 text-xs border border-gray-300 rounded text-black">
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {(product.color || product.fabric) && (
+                  <div className="text-sm text-gray-600 mb-2">
+                    {product.color && <span>{product.color}</span>}
+                    {product.color && product.fabric && <span> • </span>}
+                    {product.fabric && <span>{product.fabric}</span>}
+                  </div>
+                )}
+
+                {/* {product.description && <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>} */}
+                {product.description && (
+  <div
+    className="text-sm text-gray-500 line-clamp-2"
+    dangerouslySetInnerHTML={{ __html: product.description }}
+  />
+)}
+
               </div>
+
+              {product.barcode && (
+                <div className="bg-gray-50 p-2 flex justify-center border-t border-gray-200">
+                  <img
+                    src={product.barcode || "/placeholder.svg"}
+                    alt={`QR Code for ${product.name}`}
+                    className="h-24 w-96 object-contain scale-2"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -1099,6 +1182,30 @@ const ProductList = () => {
                   >
                     Cancel
                   </button>
+                  <div className="flex gap-2 items-center">
+  <button
+    onClick={loadProducts}
+    title="Refresh"
+    className="p-2 bg-gray-100 rounded"
+  >
+    <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+  </button>
+
+  <button
+    onClick={exportToExcel}
+    className="px-3 py-1 bg-green-100 text-green-800 rounded"
+  >
+    Export Excel
+  </button>
+
+  <button
+    onClick={exportToPDF}
+    className="px-3 py-1 bg-blue-100 text-blue-800 rounded"
+  >
+    Export PDF
+  </button>
+</div>
+
                 </div>
               </form>
             </div>

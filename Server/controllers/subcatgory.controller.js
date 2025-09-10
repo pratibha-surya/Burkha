@@ -25,11 +25,27 @@ const getSubcategoryById = async (req, res) => {
 // Create a new Subcategory
 const createSubcategory = async (req, res) => {
     try {
-        const { name, category } = req.body;
-        const newSubcategory = new Subcategory({ name, category });
+        const { name, category, youtubeUrl } = req.body; // Destructure youtubeUrl from the body
+
+        // You can add validation here if necessary
+        if (!name || !category) {
+            return res.status(400).json({ error: 'Name and category are required' });
+        }
+
+        // Create a new subcategory object
+        const newSubcategory = new Subcategory({
+            name,
+            category,
+            youtubeUrl: youtubeUrl || '',  // Optional youtubeUrl, default to empty string if not provided
+        });
+
+        // Save the new subcategory to the database
         await newSubcategory.save();
+
+        // Send the created subcategory in the response
         res.status(201).json(newSubcategory);
     } catch (error) {
+        // Handle any errors
         res.status(500).json({ error: error.message });
     }
 };

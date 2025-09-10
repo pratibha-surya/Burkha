@@ -14,7 +14,7 @@ const getAllProducts = async (req, res) => {
     if (category) {
       query.category = category;
     }
-    const products = await Product.find(query).populate("category subCategory");
+    const products = await Product.find(query).populate("category subCategory").sort({createdAt:-1});
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products", error });
@@ -51,7 +51,7 @@ const getAllProductshome = async (req, res) => {
 
     // Add search condition if provided
     if (search) {
-      query.name = { $regex: search, $options: "i" }; // Case-insensitive search
+      query.name = { $regex: search, $options: "i" }; 
     }
 
     // Add category filter if provided
@@ -60,10 +60,10 @@ const getAllProductshome = async (req, res) => {
     }
 
     // Execute query with population
-    const products = await Product.find(query)
+    const products = await Product.find(query).sort({ createdAt: -1 })
       .populate("category subCategory")
       .exec(); // Using .exec() for better promise handling
-    console.log(products, "aaaaaaaaaaaaaaaaaaaaaaaaa");
+    
 
     res.status(200).json({
       success: true,
@@ -96,6 +96,7 @@ const getProductById = async (req, res) => {
 // Create a product
 const createProduct = async (req, res) => {
   try {
+   
     const {
       name,
       price,
@@ -106,9 +107,12 @@ const createProduct = async (req, res) => {
       category,
       subCategory,
       stock,
+      youtubeUrl,
+      mrp,
+ // make sure this is included
     } = req.body;
 
-    // Parse JSON string if needed (e.g., size might be sent as stringified array)
+    // Parse JSON string if size is sent as stringified array
     const parsedSize = typeof size === "string" ? JSON.parse(size) : size;
 
     // Handle image uploads
@@ -126,11 +130,11 @@ const createProduct = async (req, res) => {
       uploadedImages.push(uploadResponse.url);
     }
 
-    // Generate numeric barcode (12 digits for EAN-13 compatibility)
+    // Generate numeric barcode (12 digits for EAN-13)
     const barcodeNumber = Date.now().toString().slice(-12).padStart(12, "0");
     const barcodeImage = await generateBarcode(barcodeNumber);
 
-    // Create product without barcode initially
+    // Create product with youtubeUrl
     const newProduct = new Product({
       name,
       price,
@@ -142,13 +146,13 @@ const createProduct = async (req, res) => {
       subCategory,
       images: uploadedImages,
       stock,
+      youtubeUrl,
       barcodeNumber,
       barcode: barcodeImage,
+      mrp,
     });
 
     await newProduct.save();
-
-    // Generate barcode image using barcodeNumber
 
     console.log("Product created:", newProduct);
     res.status(201).json(newProduct);
@@ -158,81 +162,10 @@ const createProduct = async (req, res) => {
   }
 };
 
-// Update a product
-// const updateProduct = async (req, res) => {
-//   console.log(req.body, "product update");
 
-//   try {
-//     const {
-//       name,
-//       price,
-//       description,
-//       color,
-//       fabric,
-//       size,
-//       category,
-//       subCategory,
-//       images,
-//       stock,
-//       barcodeNumber,
-//     } = req.body;
-//     const parsedSize = size
-//       ? typeof size === "string"
-//         ? JSON.parse(size)
-//         : size
-//       : undefined;
 
-//     // If barcodeNumber is provided, ensure it's unique
-//     if (barcodeNumber) {
-//       const existingProduct = await Product.findOne({
-//         barcodeNumber,
-//         _id: { $ne: req.params.id },
-//       });
-//       if (existingProduct) {
-//         return res
-//           .status(400)
-//           .json({ message: "Barcode number already in use" });
-//       }
-//     }
 
-//     const updatedProduct = await Product.findByIdAndUpdate(
-//       req.params.id,
-//       {
-//         name,
-//         price,
-//         description,
-//         color,
-//         fabric,
-//         size: parsedSize,
-//         category,
-//         subCategory,
-//         images,
-//         stock,
-//         barcodeNumber,
-//       },
-//       { new: true }
-//     ).populate("category subCategory");
 
-//     if (!updatedProduct) {
-//       return res.status(404).json({ message: "Product not found" });
-//     }
-
-//     // Regenerate barcode image if barcodeNumber changed
-//     if (barcodeNumber && barcodeNumber !== updatedProduct.barcodeNumber) {
-//       const barcodeImage = await generateBarcode(barcodeNumber);
-//       updatedProduct.barcode = barcodeImage;
-//       await updatedProduct.save();
-//     }
-
-//     // console.log("Product updated:", updatedProduct);
-//     res.status(200).json(updatedProduct);
-//   } catch (error) {
-//     console.error("Error updating product:", error);
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// Purchase a product
 const purchaseProduct = async (req, res) => {
   try {
     const { id, quantity } = req.query;
@@ -264,7 +197,7 @@ const getproducthome = async (req, res) => {
   const newHomeVisibility = homeVisibility;
 
   try {
-    console.log(homeVisibility, "sdafsa");
+   
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       { homeVisibility: homeVisibility },
@@ -499,40 +432,6 @@ const removeImageFromProduct = async (req, res) => {
   }
 };
 
-// ! remove image from imagekit
-
-// const removeImageFromProduct = async (req, res) => {
-//   try {
-//     const { productId } = req.params;
-//     const { fileId } = req.body;
-
-//     if (!fileId) {
-//       return res.status(400).json({ message: "fileId is required" });
-//     }
-
-//     const product = await Product.findById(productId);
-//     if (!product) {
-//       return res.status(404).json({ message: "Product not found" });
-//     }
-
-//     // Filter out the image with the given fileId
-//     product.images = product.images.filter(img => img.fileId !== fileId);
-
-//     // Delete from ImageKit
-//     await imagekit.deleteFile(fileId);
-
-//     await product.save();
-
-//     res.status(200).json({
-//       message: "Image removed from DB and ImageKit",
-//       product,
-//     });
-
-//   } catch (error) {
-//     console.error("Error removing image:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 
 module.exports = {
   getAllProducts,

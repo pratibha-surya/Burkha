@@ -35,7 +35,7 @@ const CancelOrder = () => {
 
     try {
       await axios.put(`${import.meta.env.VITE_API_URL}/order/${id}/cancel`, {
-        cancelDetails
+        reason: cancelDetails.reason
       });
       navigate('/orders', { state: { message: 'Order cancelled successfully' } });
     } catch (err) {

@@ -16,12 +16,12 @@ const ContactDisplay = () => {
 
   const fetchEnquiries = async () => {
     try {
-      const response = await fetch(' http://localhost:8080/contact/allcontact');
+      const response = await fetch('http://localhost:8080/contact/allcontact');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      
+
       // Ensure data is an array before setting state
       if (!Array.isArray(data)) {
         if (data.data && Array.isArray(data.data)) {
@@ -46,14 +46,14 @@ const ContactDisplay = () => {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(` http://localhost:8080/contact/alldelete/${id}`, {
+      const response = await fetch(` https://localhost:8080/contact/alldelete/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to delete enquiry: ${response.status}`);
       }
-      
+
       setEnquiries(prev => prev.filter(enquiry => enquiry._id !== id));
       toast.success('Enquiry deleted successfully');
     } catch (err) {

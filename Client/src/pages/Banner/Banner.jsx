@@ -64,7 +64,7 @@ const Banner = () => {
 
     try {
       const response = await axios.post(
-        ' http://localhost:8080/banner/create',
+        'http://localhost:8080/banner/create',
         formData,
         {
           headers: {

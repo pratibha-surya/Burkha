@@ -46,7 +46,7 @@ const CartPage = () => {
     setEditedQuantities(initial);
   }, [cart]);
 
-  console.log(vendors,'aaaaaaaaaaaaaaaaaaaaaaaaaaa')
+  
 
   useEffect(() => {
     const fetchVendors = async () => {

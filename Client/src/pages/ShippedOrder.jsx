@@ -38,10 +38,11 @@ const ShipOrder = () => {
     }
 
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/order/${id}/ship`, {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/order/${id}/ship`, {
         remark: shippingDetails.remark,
         shippingDate: shippingDetails.shippingDate,
       });
+      console.log("Ship order response:", response.data);
       toast.success(`Order #${id.slice(-6).toUpperCase()} shipped successfully!`);
       navigate('/orders');
     } catch (err) {

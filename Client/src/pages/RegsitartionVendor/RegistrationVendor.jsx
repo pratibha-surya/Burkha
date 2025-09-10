@@ -26,7 +26,7 @@
 
 //   const fetchUsers = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:8080/user');
+//       const response = await axios.get('https://backend.umairabaya.com/user');
 //       console.log(response,'aaaaaaaaaaaaaaaaa')
 //       setUsers(response.data);
 //     } catch (error) {
@@ -64,7 +64,7 @@
 
 //   const handleUpdate = async (id) => {
 //     try {
-//       await axios.put(`http://localhost:8080/user/users/${id}`, formData);
+//       await axios.put(`https://backend.umairabaya.com/user/users/${id}`, formData);
 //       setEditingUser(null);
 //       fetchUsers();
 //     } catch (error) {
@@ -74,7 +74,7 @@
 
 //   const handleDelete = async (id) => {
 //     try {
-//       await axios.delete(`http://localhost:8080/user/users/${id}`);
+//       await axios.delete(`https://backend.umairabaya.com/user/users/${id}`);
 //       fetchUsers();
 //     } catch (error) {
 //       console.error('Error deleting user:', error);
@@ -84,7 +84,7 @@
 //   return (
 //     <div className="container mx-auto px-4 py-8">
 //       <h1 className="text-3xl font-bold text-center mb-8">User Management</h1>
-      
+
 //       <div className="overflow-x-auto bg-white rounded-lg shadow">
 //         <table className="min-w-full divide-y divide-gray-200">
 //           <thead className="bg-gray-50">
@@ -363,10 +363,12 @@ const RegistrationVendor = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/user');
-      setUsers(response.data);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`);
+      const data = response?.data || [];
+      const list = Array.isArray(data) ? data : (data.users || []);
+      setUsers(list);
     } catch (error) {
-      toast.error('Failed to fetch users');
+      toast.error(error.response?.data?.message || 'Failed to fetch users');
     }
   };
 
@@ -403,22 +405,41 @@ const RegistrationVendor = () => {
 
   const handleUpdate = async (id) => {
     try {
-      await axios.put(`http://localhost:8080/user/users/${id}`, formData);
+      const sanitized = Object.fromEntries(
+        Object.entries(formData).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
+      );
+      // Cast numbers
+      sanitized.discount = Number(sanitized.discount) || 0;
+      sanitized.limit = Number(sanitized.limit) || 0;
+      // Drop optional empties
+      if (!sanitized.mobile2) delete sanitized.mobile2;
+      if (!sanitized.whatsapp) delete sanitized.whatsapp;
+      if (!sanitized.password) delete sanitized.password;
+
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/user/users/${id}`,
+        sanitized,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       setEditingUser(null);
       fetchUsers();
       toast.success('User updated successfully');
     } catch (error) {
-      toast.error('Error updating user');
+      const msg = error?.response?.data
+        ? (typeof error.response.data === 'string' ? error.response.data : (error.response.data.message || JSON.stringify(error.response.data)))
+        : error.message || 'Error updating user';
+      console.error('Update error:', msg);
+      toast.error(msg);
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/user/users/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/user/users/${id}`);
       fetchUsers();
       toast.success('User deleted successfully');
     } catch (error) {
-      toast.error('Error deleting user');
+      toast.error(error.response?.data?.message || 'Error deleting user');
     }
   };
 

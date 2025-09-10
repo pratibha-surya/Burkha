@@ -17,6 +17,7 @@ const Registration = () => {
       state: "",
       city: "",
       limit : "",
+      discount: "",
       address: "",
       password: "",
     },
@@ -32,17 +33,40 @@ const Registration = () => {
       city: Yup.string().required("Required"),
       address: Yup.string().required("Required"),
       password: Yup.string().required("Required"),
-      limit: Yup.string().required("Required"),
+      limit: Yup.number().typeError("Must be a number").required("Required"),
+      discount: Yup.number().typeError("Must be a number").nullable(),
     }),
     onSubmit: async (values) => {
       try {
-       const response = await axios.post(`${import.meta.env.VITE_API_URL}/user/register`, values);
+       // build payload: trim strings, cast numbers, drop empty optional fields
+       const trimmed = Object.fromEntries(
+         Object.entries(values).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+       );
+       if (trimmed.limit !== '' && trimmed.limit !== null && trimmed.limit !== undefined) {
+         trimmed.limit = Number(trimmed.limit);
+       }
+       if (trimmed.discount === '' || trimmed.discount === null || trimmed.discount === undefined) {
+         delete trimmed.discount;
+       } else {
+         trimmed.discount = Number(trimmed.discount);
+       }
+       if (!trimmed.mobile2) delete trimmed.mobile2;
+       if (!trimmed.whatsapp) delete trimmed.whatsapp;
+
+       const response = await axios.post(
+         `${import.meta.env.VITE_API_URL}/user/register`,
+         trimmed,
+         { headers: { 'Content-Type': 'application/json' } }
+       );
         console.log("Registration successful:", response.data);
         toast.success("Registration successful!");
         formik.resetForm(); // Reset the form after successful submission
       } catch (error) {
-        console.error("Registration failed:", error.response.data);
-        toast.error("Registration failed. Please try again.");
+        const serverMessage = error && error.response && error.response.data
+          ? (typeof error.response.data === 'string' ? error.response.data : JSON.stringify(error.response.data))
+          : error.message || "Registration failed. Please try again.";
+        console.error("Registration failed:", serverMessage);
+        toast.error(serverMessage);
       }
     }
   });

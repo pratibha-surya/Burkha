@@ -5,24 +5,24 @@ import { useNavigate } from 'react-router-dom';
 const Register = () => {
     const api = " http://localhost:8080/user/register";
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState({
         firmName: '',
         contact: '',
         email: '',
         password: ''
     });
-    
+
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
             [name]: value
         });
-        
+
         // Clear error when user types
         if (errors[name]) {
             setErrors({
@@ -31,41 +31,41 @@ const Register = () => {
             });
         }
     };
-    
+
     const validate = () => {
         const newErrors = {};
-        
+
         if (!formData.firmName.trim()) {
             newErrors.firmName = 'Firm name is required';
         }
-        
+
         if (formData.contact && !/^\d{10}$/.test(formData.contact)) {
             newErrors.contact = 'Contact must be 10 digits';
         }
-        
+
         if (!formData.email) {
             newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Invalid email format';
         }
-        
+
         if (!formData.password) {
             newErrors.password = 'Password is required';
         } else if (formData.password.length < 6) {
             newErrors.password = 'Password must be at least 6 characters';
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validate()) return;
-        
+
         setIsSubmitting(true);
-        
+
         try {
             const response = await axios.post(api, formData);
             console.log('Registration successful:', response.data);
@@ -78,7 +78,7 @@ const Register = () => {
             setIsSubmitting(false);
         }
     };
-    
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
@@ -104,7 +104,7 @@ const Register = () => {
                             />
                             {errors.firmName && <p className="mt-1 text-sm text-red-600">{errors.firmName}</p>}
                         </div>
-                        
+
                         <div>
                             <label htmlFor="contact" className="block text-sm font-medium text-gray-700">
                                 Contact Number
@@ -120,7 +120,7 @@ const Register = () => {
                             />
                             {errors.contact && <p className="mt-1 text-sm text-red-600">{errors.contact}</p>}
                         </div>
-                        
+
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Email Address *
@@ -136,7 +136,7 @@ const Register = () => {
                             />
                             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                         </div>
-                        
+
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                 Password *
@@ -164,7 +164,7 @@ const Register = () => {
                         </button>
                     </div>
                 </form>
-                
+
                 <div className="text-center text-sm">
                     <p className="text-gray-600">
                         Already have an account?{' '}

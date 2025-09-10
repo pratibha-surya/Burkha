@@ -35,11 +35,23 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Subcategory"
   },
+  youtubeUrl:{
+    type:String,
+    required: true ,
+
+  },
+  mrp:{
+    type:String,
+    required:true,
+  },
+
   homeVisibility: { type: Boolean, default: false },
   size: [String],
   color: String,
   fabric: String,
   images: [String]
+  
+
 });
 
 module.exports = mongoose.model('product', productSchema);

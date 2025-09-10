@@ -3,57 +3,47 @@ const Order = require('../models/orderModel');
 const Product = require('../models/product.model');
 const Vendor = require('../models/RegistrationModel');
 const Cart = require('../models/cart.model');
+const nodemailer=require('nodemailer')
 
 const createOrder = asyncHandler(async (req, res) => {
   const { orderItems, totalPrice, totalPriceAfterDiscount, vendor } = req.body;
+  console.log(req.body);
 
+  // ✅ Validate required fields
   if (
-    !orderItems ||
-    !Array.isArray(orderItems) ||
-    orderItems.length === 0 ||
-    totalPrice === undefined ||
-    totalPriceAfterDiscount === undefined ||
+    !Array.isArray(orderItems) || orderItems.length === 0 ||
+    totalPrice == null || totalPriceAfterDiscount == null ||
     !vendor
   ) {
     res.status(400);
     throw new Error('Missing required fields: orderItems, totalPrice, totalPriceAfterDiscount, or vendor');
   }
 
-  // ✅ First, fetch the vendor data
+  // ✅ Fetch vendor details
   const vendorData = await Vendor.findById(vendor);
+  
   if (!vendorData) {
     res.status(404);
     throw new Error(`Vendor not found: ${vendor}`);
   }
 
-  // ✅ Then, get all previous orders of that vendor
-  const orders = await Order.find({ vendor }).sort({ createdAt: -1 });
-
-  // ✅ Calculate the total due amount
-  const totalDueAmount = orders.reduce((acc, order) => acc + (order.dueAmount || 0), 0);
-  console.log(totalDueAmount,)
-
-  // ✅ Check if limit will be exceeded by this new order
+  // ✅ Fetch all previous orders to calculate outstanding dues
+  const previousOrders = await Order.find({ vendor });
+  const totalDueAmount = previousOrders.reduce((sum, order) => sum + (order.dueAmount || 0), 0);
   const newTotalDue = totalDueAmount + totalPriceAfterDiscount;
-  const isLimitExceeded = newTotalDue > (vendorData.limit || 0);
 
-  if (isLimitExceeded) {
+  if (vendorData.limit && newTotalDue > vendorData.limit) {
     res.status(400);
-    throw new Error(`Vendor limit exceeded. Current due: ${totalDueAmount}, new order: ${totalPriceAfterDiscount}, limit: ${vendorData.limit}`);
+    throw new Error(`Vendor limit exceeded. Current due: ₹${totalDueAmount}, new order: ₹${totalPriceAfterDiscount}, limit: ₹${vendorData.limit}`);
   }
 
-  // 🔁 Validate order items and stock (your original loop stays the same)
+  // ✅ Validate each order item and check stock
   for (const item of orderItems) {
-    if (
-      !item.productId ||
-      !item.productName ||
-      item.price === undefined ||
-      item.quantity === undefined ||
-      item.discountPercentage === undefined ||
-      item.priceAfterDiscount === undefined
-    ) {
+    const requiredFields = ['productId', 'productName', 'price', 'quantity', 'discountPercentage', 'priceAfterDiscount'];
+    const missingField = requiredFields.find(f => item[f] === undefined || item[f] === null);
+    if (missingField) {
       res.status(400);
-      throw new Error('Each order item must include productId, productName, price, quantity, discountPercentage, and priceAfterDiscount');
+      throw new Error(`Missing field "${missingField}" in order item`);
     }
 
     const product = await Product.findById(item.productId);
@@ -61,13 +51,14 @@ const createOrder = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error(`Product not found: ${item.productName}`);
     }
+
     if (product.stock < item.quantity) {
       res.status(400);
-      throw new Error(`Insufficient stock for ${item.productName}. Only ${product.stock} available.`);
+      throw new Error(`Insufficient stock for ${item.productName}. Available: ${product.stock}`);
     }
   }
 
-  // ✅ Create the order (rest of your logic continues as before)
+  // ✅ Construct the order
   const order = new Order({
     orderItems: orderItems.map(item => ({
       ...item,
@@ -80,10 +71,10 @@ const createOrder = asyncHandler(async (req, res) => {
         whatsapp: vendorData.whatsapp,
         email: vendorData.email,
         address: vendorData.address,
-        limit: vendorData.limit,
         city: vendorData.city,
         state: vendorData.state,
-        discount: vendorData.discount
+        discount: vendorData.discount,
+        limit: vendorData.limit
       }
     })),
     totalPrice,
@@ -94,33 +85,36 @@ const createOrder = asyncHandler(async (req, res) => {
     vendor
   });
 
+  // ✅ Save the order
   const savedOrder = await order.save();
 
-  // Update stock
+  // ✅ Populate vendor in the saved order
+  const populatedOrder = await Order.findById(savedOrder._id).populate('vendor');
+
+  // ✅ Update product stock
   for (const item of orderItems) {
-    const product = await Product.findById(item.productId);
-    product.stock -= item.quantity;
-    await product.save();
+    await Product.findByIdAndUpdate(item.productId, {
+      $inc: { stock: -item.quantity }
+    });
   }
 
-  // Clear cart
-  let cart = await Cart.findOne();
-  if (cart) {
-    cart.products = [];
-    await cart.save();
-  }
+  // ✅ Clear cart (for all users or implement per-user logic if needed)
+  await Cart.updateMany({}, { $set: { products: [] } });
 
+  // ✅ Send response
   res.status(201).json({
     success: true,
     message: 'Order created successfully',
-    order: savedOrder
+    order: populatedOrder
   });
 });
+
 
 
 // Get all orders
 const getAllOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find().sort({ createdAt: -1 });
+  console.log(orders)
   res.status(200).json({
     success: true,
     orders
@@ -327,6 +321,96 @@ const getMemberById = async (req, res) => {
 };
 
 
+
+
+
+// controllers/orderController.js
+
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const sendOrderEmailById = async (req, res) => {
+  const orderId = req.params.orderId;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Compose email content
+    let orderItemsHtml = '';
+    order.orderItems.forEach(item => {
+      orderItemsHtml += `<li>${item.productName} - Qty: ${item.quantity} - Price: $${item.priceAfterDiscount || item.price}</li>`;
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: 'customer@example.com',  // Ideally get customer email from order schema
+      subject: `Order Confirmation - Order #${order.formattedId || order._id}`,
+      html: `
+        <h2>Thank you for your purchase!</h2>
+        <p>Order ID: ${order.formattedId || order._id}</p>
+        <ul>${orderItemsHtml}</ul>
+        <p>Total Price: $${order.totalPrice}</p>
+        <p>Total after Discount: $${order.totalPriceAfterDiscount}</p>
+        <p>Payment Status: ${order.paymentStatus}</p>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: 'Order confirmation email sent' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to send email' });
+  }
+};
+
+ const getOrdersDueAmount = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    const filter = {};
+    if (from && to) {
+      filter.createdAt = {
+        $gte: new Date(from),
+        $lte: new Date(to),
+      };
+    }
+
+    const orders = await Order.find(filter)
+      .populate('payments')
+      .sort({ createdAt: -1 });
+
+    const filteredOrders = orders
+      .map(order => {
+        const total = order.totalPriceAfterDiscount || 0;
+        const paid = order.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const dueAmount = total - paid;
+
+        return {
+          ...order.toObject(),
+          amount: paid,
+          dueAmount: dueAmount >= 0 ? dueAmount : 0,
+        };
+      })
+      .filter(order => order.dueAmount > 0); // Return only orders with dues
+
+    res.json({ orders: filteredOrders });
+  } catch (error) {
+    console.error('Error fetching due amount orders:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
 module.exports = {
   createOrder,
   getAllOrders,
@@ -340,5 +424,7 @@ module.exports = {
   getShippedOrders,
   getCancelledOrders,
   getOrdersWithDueAmount,
-  getMemberById
+  getMemberById,
+  sendOrderEmailById,
+  getOrdersDueAmount
 };

@@ -22,6 +22,7 @@ const LoginRoute = require("./routes/userRoute");
 const CheckRoute = require("./routes/Checkoutroute");
 const PaymentRoute = require("./routes/paymentRoute");
 
+
 // db connect
 dbconnect();
 
@@ -29,7 +30,7 @@ dbconnect();
 app.use(morgan("dev"));
 
 // allow cors
-app.use(cors());
+app.use(cors("http://localhost:3000"));
 
 // file uplaod middleware
 app.use(fileUpload());
@@ -82,6 +83,7 @@ app.use("/auth", LoginRoute);
 
 // payments user routes
 app.use("/paymentuser", PaymentRoute);
+
 
 app.listen(8080, () => {
   console.log("Server is running on port 8080");

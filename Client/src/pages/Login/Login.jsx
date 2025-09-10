@@ -5,23 +5,23 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
     const api = " http://localhost:8080/user/login";
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
-    
+
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loginError, setLoginError] = useState('');
-    
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
             [name]: value
         });
-        
+
         // Clear error when user types
         if (errors[name]) {
             setErrors({
@@ -31,38 +31,38 @@ const Login = () => {
         }
         if (loginError) setLoginError('');
     };
-    
+
     const validate = () => {
         const newErrors = {};
-        
+
         if (!formData.email) {
             newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Invalid email format';
         }
-        
+
         if (!formData.password) {
             newErrors.password = 'Password is required';
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validate()) return;
-        
+
         setIsSubmitting(true);
-        
+
         try {
             const response = await axios.post(api, formData);
             console.log('Login successful:', response.data);
-            
+
             // Store the token or user data as needed
             localStorage.setItem('authToken', response.data.token);
-            
+
             // Redirect to dashboard or home page
             navigate('/');
         } catch (error) {
@@ -72,7 +72,7 @@ const Login = () => {
             setIsSubmitting(false);
         }
     };
-    
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
@@ -81,7 +81,7 @@ const Login = () => {
                         Sign in to your account
                     </h2>
                 </div>
-                
+
                 {loginError && (
                     <div className="bg-red-50 border-l-4 border-red-500 p-4">
                         <div className="flex">
@@ -96,7 +96,7 @@ const Login = () => {
                         </div>
                     </div>
                 )}
-                
+
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="rounded-md shadow-sm space-y-4">
                         <div>
@@ -114,7 +114,7 @@ const Login = () => {
                             />
                             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                         </div>
-                        
+
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                 Password *
@@ -162,7 +162,7 @@ const Login = () => {
                         </button>
                     </div>
                 </form>
-                
+
                 <div className="text-center text-sm">
                     <p className="text-gray-600">
                         Don't have an account?{' '}

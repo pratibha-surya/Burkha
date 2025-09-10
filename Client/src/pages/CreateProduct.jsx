@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { addProduct, fetchcategory, fetchSubcategory } from "../api"
-import { CheckCircle, Upload, X } from "lucide-react"
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { ToastContainer, toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Upload, X } from "lucide-react"
+import { CKEditor } from '@ckeditor/ckeditor5-react'
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
+import { ToastContainer, toast } from "react-toastify"
+import { useNavigate } from "react-router-dom"
+
 const CreateProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
+    mrp: "",
     description: "",
     color: "",
     fabric: "",
@@ -18,28 +20,27 @@ const CreateProduct = () => {
     category: "",
     subCategory: "",
     images: [],
-    stock: "" // Added stock field
+    stock: "",
+    youtubeUrl: "",
   })
+
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
-  const [error, seterror] = useState("")
-  const navigate = useNavigate();
+  const [error, setError] = useState("")
+  const navigate = useNavigate()
 
-  // Fetch categories and subcategories
   useEffect(() => {
     const fetchCategories = async () => {
       setLoading(true)
       try {
-        const response = await fetchcategory();
-        if (response.data) {
-          setCategories(response.data)
-        }
+        const response = await fetchcategory()
+        if (response.data) setCategories(response.data)
       } catch (error) {
         console.error("Error fetching categories:", error)
-        seterror("Failed to load categories. Please try again.")
+        setError("Failed to load categories. Please try again.")
       } finally {
         setLoading(false)
       }
@@ -47,14 +48,11 @@ const CreateProduct = () => {
     fetchCategories()
   }, [])
 
-  // Fetch all subcategories once
   useEffect(() => {
     const fetchSubCategories = async () => {
       try {
-        const response = await fetchSubcategory();
-        if (response.data) {
-          setSubCategories(response.data)
-        }
+        const response = await fetchSubcategory()
+        if (response.data) setSubCategories(response.data)
       } catch (error) {
         console.error("Error fetching subcategories:", error)
       }
@@ -97,11 +95,9 @@ const CreateProduct = () => {
       return
     }
 
-    // Add new files to existing files
     setImageFiles((prev) => [...prev, ...files.slice(0, 5 - prev.length)])
     setError("")
 
-    // Create previews for new files
     const newPreviews = []
     files.slice(0, 5 - imageFiles.length).forEach((file) => {
       const reader = new FileReader()
@@ -125,10 +121,8 @@ const CreateProduct = () => {
     setLoading(true)
 
     try {
-      // Create FormData object for file uploads
       const productData = new FormData()
 
-      // Add all form fields except images
       Object.keys(formData).forEach((key) => {
         if (key === "size") {
           productData.append(key, JSON.stringify(formData[key]))
@@ -137,17 +131,16 @@ const CreateProduct = () => {
         }
       })
 
-      // Add image files
       imageFiles.forEach((file) => {
         productData.append("images", file)
       })
 
       const response = await addProduct(productData)
       if (response.status === 201) {
-        // Reset form
         setFormData({
           name: "",
           price: "",
+          mrp: "",
           description: "",
           color: "",
           fabric: "",
@@ -155,30 +148,29 @@ const CreateProduct = () => {
           category: "",
           subCategory: "",
           images: [],
-          stock: ""
+          stock: "",
+          youtubeUrl: "",
         })
         setImageFiles([])
         setImagePreviews([])
-        toast.success("Product Created Successfullly...")
+        toast.success("Product Created Successfully...")
         setTimeout(() => {
-          navigate("/");
-        }, 2000);
+          navigate("/")
+        }, 2000)
       } else {
-        toast.warn("Product Creattionn Failed, please try again...")
+        toast.warn("Product creation failed, please try again...")
       }
-
     } catch (error) {
       console.error("Error adding product:", error)
-      seterror("Failed to add product. Please try again.")
+      setError("Failed to add product. Please try again.")
     } finally {
       setLoading(false)
     }
   }
 
-  // Filter subcategories based on selected category
   const filteredSubCategories = formData.category
     ? subCategories.filter(subCat => subCat.category === formData.category)
-    : [];
+    : []
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
@@ -187,17 +179,10 @@ const CreateProduct = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        {/* {error && (
-          <div className="flex items-center justify-center text-red-600 bg-red-50 p-3 rounded-md">
-            <X className="mr-2" size={18} />
-            <span>{error}</span>
-          </div>
-        )} */}
         <ToastContainer />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-
+          {/* Category */}
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
               Category*
@@ -208,7 +193,7 @@ const CreateProduct = () => {
               value={formData.category}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             >
               <option value="">Select Category</option>
               {categories.map((category) => (
@@ -229,8 +214,8 @@ const CreateProduct = () => {
               name="subCategory"
               value={formData.subCategory}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               disabled={!formData.category}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             >
               <option value="">Select Sub-Category</option>
               {filteredSubCategories.map((subCategory) => (
@@ -240,7 +225,8 @@ const CreateProduct = () => {
               ))}
             </select>
           </div>
-          {/* Product Name */}
+
+          {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Product Name*
@@ -249,11 +235,10 @@ const CreateProduct = () => {
               type="text"
               id="name"
               name="name"
-              placeholder="Enter product name"
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             />
           </div>
 
@@ -266,17 +251,33 @@ const CreateProduct = () => {
               type="number"
               id="price"
               name="price"
-              placeholder="0.00"
               value={formData.price}
               onChange={handleChange}
               required
-              step="0.01"
               min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              step="0.01"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             />
           </div>
 
-          {/* Stock/Available Quantity */}
+          {/* MRP */}
+          <div>
+            <label htmlFor="mrp" className="block text-sm font-medium text-gray-700 mb-1">
+              MRP (₹)
+            </label>
+            <input
+              type="number"
+              id="mrp"
+              name="mrp"
+              value={formData.mrp}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
+            />
+          </div>
+
+          {/* Stock */}
           <div>
             <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
               Available Quantity*
@@ -285,17 +286,13 @@ const CreateProduct = () => {
               type="number"
               id="stock"
               name="stock"
-              placeholder="0"
               value={formData.stock}
               onChange={handleChange}
               required
               min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             />
           </div>
-
-          {/* Category */}
-
 
           {/* Color */}
           <div>
@@ -306,10 +303,9 @@ const CreateProduct = () => {
               type="text"
               id="color"
               name="color"
-              placeholder="e.g., Red, Blue, Black"
               value={formData.color}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             />
           </div>
 
@@ -322,26 +318,25 @@ const CreateProduct = () => {
               type="text"
               id="fabric"
               name="fabric"
-              placeholder="e.g., Cotton, Polyester"
               value={formData.fabric}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
             />
           </div>
         </div>
 
-        {/* Size Selection */}
+        {/* Sizes */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
           <div className="flex flex-wrap gap-3">
             {["52", "54", "56", "58"].map((size) => (
               <button
-                key={size}
                 type="button"
+                key={size}
                 onClick={() => handleSizeToggle(size)}
                 className={`px-4 py-2 rounded-md border ${formData.size.includes(size)
                   ? "bg-primary-600 text-white border-primary-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  : "bg-white text-gray-700 border-gray-300"
                   }`}
               >
                 {size}
@@ -350,23 +345,30 @@ const CreateProduct = () => {
           </div>
         </div>
 
-        {/* Description with CKEditor */}
+        {/* YouTube URL */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
+          <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-700 mb-1">
+            YouTube Video URL
           </label>
+          <input
+            type="url"
+            id="youtubeUrl"
+            name="youtubeUrl"
+            placeholder="https://www.youtube.com/watch?v=example"
+            value={formData.youtubeUrl}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
           <div className="border border-gray-300 rounded-md">
             <CKEditor
               editor={ClassicEditor}
               data={formData.description}
               onChange={handleDescriptionChange}
-              config={{
-                toolbar: [
-                  'heading', '|',
-                  'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
-                  'blockQuote', 'insertTable', 'undo', 'redo'
-                ]
-              }}
             />
           </div>
         </div>
@@ -374,8 +376,6 @@ const CreateProduct = () => {
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
-
-          {/* Image Previews */}
           {imagePreviews.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
               {imagePreviews.map((preview, index) => (
@@ -388,7 +388,7 @@ const CreateProduct = () => {
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                   >
                     <X size={16} />
                   </button>
@@ -397,19 +397,14 @@ const CreateProduct = () => {
             </div>
           )}
 
-          {/* Upload Button */}
-          <label className={`flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-primary-500 focus:outline-none ${imageFiles.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+          <label className="flex items-center justify-center w-full h-32 px-4 border-2 border-dashed border-gray-300 rounded-md cursor-pointer">
             <div className="flex flex-col items-center space-y-2">
               <Upload className="w-6 h-6 text-gray-500" />
-              <span className="font-medium text-gray-600">
-                Drop files to upload or
-                <span className="text-primary-600 underline ml-1">browse</span>
-              </span>
+              <span className="text-gray-600">Drop files or <span className="underline">browse</span></span>
               <span className="text-xs text-gray-500">
                 {imageFiles.length >= 5
-                  ? 'Maximum 5 images reached'
-                  : `Upload up to 5 images (${imageFiles.length}/5)`
-                }
+                  ? "Maximum 5 images reached"
+                  : `Upload up to 5 images (${imageFiles.length}/5)`}
               </span>
             </div>
             <input
@@ -424,27 +419,16 @@ const CreateProduct = () => {
           </label>
         </div>
 
-
-        {/* Submit Button */}
+        {/* Submit */}
         <div>
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
+            className="w-full py-2 px-4 bg-primary-600 text-white font-semibold rounded-md"
           >
             {loading ? "Adding Product..." : "Add Product"}
           </button>
         </div>
-
-
-        {/* {success && (
-          <div className="flex items-center justify-center text-green-600 bg-green-50 p-3 rounded-md">
-            <CheckCircle className="mr-2" size={18} />
-            <span>Product added successfully!</span>
-          </div>
-        )} */}
-
-
       </form>
     </div>
   )

@@ -93,6 +93,7 @@ const Sidebar = () => {
       subItems: [
         { to: "/todayorder", label: "Today Order", icon: ClipboardList },
         { to: "/orders", label: "Total Orders", icon: ClipboardList },
+          
         { to: "/deliverorder", label: "Dispatch Order", icon: Truck },
         { to: "/shippedorderdisplay", label: "Shipped Orders", icon: QrCode },
         { to: "/cancelorder", label: "Cancel Order", icon: QrCode },
@@ -125,6 +126,17 @@ const Sidebar = () => {
    
       ],
     },
+    {
+  label: "Outstanding",
+  icon: BarChart2, // Use any standout icon
+  subItems: [
+    { to: "/outstanding-payments", label: " Payments", icon: ClipboardList },
+    
+  ],
+},
+
+
+
 
 
     {

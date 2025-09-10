@@ -1,4 +1,5 @@
 const express = require('express');
+const Order = require('../models/orderModel');
 const {
   createOrder,
   getAllOrders,
@@ -12,8 +13,14 @@ const {
   getShippedOrders,
   getCancelledOrders,
   getOrdersWithDueAmount,
-   getMemberById 
+   getMemberById,
+   sendOrderEmailById,
+   getOrdersDueAmount, 
+   
+  
 } = require('../controllers/order.controller');
+
+
 
 const router = express.Router();
 
@@ -30,5 +37,33 @@ router.get('/status/shipped', getShippedOrders);
 router.get('/status/cancelled', getCancelledOrders);
 router.get('/dueAmount/:hasDueAmount', getOrdersWithDueAmount);
 router.get("/member/:id", getMemberById)
+router.post('/send-order-email', sendOrderEmailById);
+router.get('/dueAmount', getOrdersDueAmount);
+router.get('/today', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const orders = await Order.find({
+      createdAt: {
+        $gte: today,
+        $lt: tomorrow
+      }
+    }).sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch today\'s orders',
+      error: error.message
+    });
+  }
+});
 
 module.exports = router;

@@ -57,6 +57,9 @@ import Customer from "./pages/ViewCustomer/Customer";
 import AllDetail from "./pages/ViewCustomer/AllDetail";
 import VendorDetail from "./pages/ViewCustomer/vendordeatil";
 import RegistrationVendor from "./pages/RegsitartionVendor/RegistrationVendor";
+import Outstanding from "./pages/Outstanding";
+import CreateOrder from "./pages/CreateOrder";
+
 
 
 function App() {
@@ -133,6 +136,7 @@ function AppContent({ onLogout }) {
       subItems: [
         { to: "/todayorder", label: "Today Order", icon: ClipboardList },
         { to: "/orders", label: "Total Orders", icon: ClipboardList },
+         
         { to: "/deliverorder", label: "Dispatch Order", icon: Truck },
         { to: "/shippedorderdisplay", label: "Shipped Orders", icon: QrCode },
         { to: "/cancelorder", label: "Cancel Order", icon: QrCode },
@@ -164,9 +168,21 @@ function AppContent({ onLogout }) {
         { to: "/purchaseScanQRCode", label: "Scan QR", icon: QrCode },
 
         { to: "/invoice", label: "All Invoices", icon: ClipboardList },
+        
+        
 
       ],
+      
     },
+    {
+  label: "Outstanding",
+  icon: BarChart2, // Use any standout icon
+  subItems: [
+    { to: "/outstanding-payments", label: " Payments", icon: ClipboardList },
+    
+  ],
+},
+
 
 
 
@@ -387,6 +403,9 @@ function AppContent({ onLogout }) {
               <Route path="/vendordetails/:id" element={<AllDetail />} />
               <Route path="/vendor/:id" element={<VendorDetail />} />
               <Route path="/registrationvendor" element={<RegistrationVendor />} />
+              <Route path="/outstanding-payments" element={<Outstanding/>}/>
+              <Route path="/create-order" element={<CreateOrder />} />
+             
             </Routes>
           </div>
         </main>
