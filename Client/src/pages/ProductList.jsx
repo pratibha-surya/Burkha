@@ -55,6 +55,9 @@ const ProductList = () => {
     homeVisibility: false,
     images: [],
     existingImages: [],
+    rack:"",
+    column:""
+
   });
   const [printQuantity, setPrintQuantity] = useState(1);
   const [stickersPerPage, setStickersPerPage] = useState(4);
@@ -65,6 +68,11 @@ const ProductList = () => {
 
   /* ------------- HELPERS ------------- */
   const Quantity = () => navigate("/purchaseproduct");
+  const goToProductDetails = () => {
+    if (editingProduct?._id) {
+      navigate(`product-details/:id`)
+    }
+  }
   const loadProducts = async () => {
     setLoading(true);
     setError(null);
@@ -137,6 +145,8 @@ const ProductList = () => {
         description: editFormData.description,
         color: editFormData.color,
         fabric: editFormData.fabric,
+        rack: editFormData.rack,
+  column: editFormData.column,
         size: editFormData.size,
         stock: Number(editFormData.stock),
         homeVisibility: editFormData.homeVisibility,
@@ -164,6 +174,9 @@ const ProductList = () => {
             description: "",
             color: "",
             fabric: "",
+           
+            column:"",
+             rack:"",
             size: [],
             category: "",
             subCategory: "",
@@ -313,9 +326,12 @@ const ProductList = () => {
       price: editingProduct.price ?? "",
       mrp: editingProduct.mrp ?? "",
       description: editingProduct.description || "",
-      color: editingProduct.color || "",
+      
+      column: editingProduct.column || "",
+    rack: editingProduct.rack || "",
       fabric: editingProduct.fabric || "",
       size: Array.isArray(editingProduct.size) ? editingProduct.size : [],
+
       // category: editingProduct.category?.name || "",
       // subCategory: editingProduct.subCategory?.name || "",
       category: {
@@ -389,6 +405,9 @@ const ProductList = () => {
       homeVisibility: false,
       images: [],
       existingImages: [],
+     
+      column:"",
+       rack:"",
     });
   };
 
@@ -698,6 +717,13 @@ const ProductList = () => {
                     {product.fabric && <span>{product.fabric}</span>}
                   </div>
                 )}
+                {(product.rack || product.column) && (
+  <div className="text-sm text-gray-600 mb-2">
+    {product.rack && <span>Rack: {product.rack}</span>}
+    {product.rack && product.column && <span> • </span>}
+    {product.column && <span>Column: {product.column}</span>}
+  </div>
+)}
 
                 {/* {product.description && <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>} */}
                 {product.description && (
@@ -800,6 +826,20 @@ const ProductList = () => {
                     <p>{selectedProduct.fabric}</p>
                   </div>
                 )}
+                {selectedProduct.column && (
+  <div>
+    <h3 className='text-sm text-gray-500'>Column</h3>
+    <p>{selectedProduct.column}</p>
+  </div>
+)}
+                 {selectedProduct.rack && (
+  <div>
+    <h3 className='text-sm text-gray-500'>Rack</h3>
+    <p>{selectedProduct.rack}</p>
+  </div>
+)}
+
+
                 {selectedProduct.size?.length && (
                   <div>
                     <h3 className='text-sm text-gray-500'>Sizes</h3>
@@ -874,111 +914,103 @@ const ProductList = () => {
               </div>
 
               {/* IMAGES SECTION */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Product Images
-                </label>
+           <div>
+  <label className='block text-sm font-medium text-gray-700 mb-2'>
+    Product Images
+  </label>
 
-                {/* Existing images */}
-                <div className='flex flex-wrap gap-4 mb-4'>
-                  {editingProduct?.images?.map((url, index) => (
-                    <div key={`existing-${index}`} className='relative group'>
-                      <img
-                        src={url}
-                        alt=''
-                        className='h-24 w-24 object-cover rounded-md border'
-                      />
-                      <button
-                        type='button'
-                        onClick={() => handleRemoveImage(url)}
-                        className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-80 hover:opacity-100 transition-opacity'
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+  {/* Existing images */}
+  <div className='flex flex-wrap gap-4 mb-4'>
+    {editingProduct?.images?.map((url, index) => (
+      <div key={`existing-${index}`} className='relative group'>
+        {/* ✅ Click image to open in new tab */}
+        <a href={url} target='_blank' rel='noopener noreferrer'>
+          <img
+            src={url}
+            alt={`Product Image ${index + 1}`}
+            className='h-24 w-24 object-cover rounded-md border cursor-pointer hover:scale-105 transition-transform'
+          />
+        </a>
+        <button
+          type='button'
+          onClick={() => handleRemoveImage(url)}
+          className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-80 hover:opacity-100 transition-opacity'
+        >
+          <X size={14} />
+        </button>
+      </div>
+    ))}
+  </div>
 
-                {/* Newly uploaded images preview */}
-                {newImages.length > 0 && (
-                  <div className='flex flex-wrap gap-4 mb-4'>
-                    {newImages.map((file, index) => (
-                      <div key={`new-${index}`} className='relative group'>
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`new-${index}`}
-                          className='h-24 w-24 object-cover rounded-md border'
-                        />
-                        <button
-                          type='button'
-                          onClick={() => {
-                            const updated = [...newImages];
-                            updated.splice(index, 1);
-                            setNewImages(updated);
-                          }}
-                          className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-80 hover:opacity-100 transition-opacity'
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+  {/* Newly uploaded images preview */}
+  {newImages.length > 0 && (
+    <div className='flex flex-wrap gap-4 mb-4'>
+      {newImages.map((file, index) => (
+        <div key={`new-${index}`} className='relative group'>
+          <img
+            src={URL.createObjectURL(file)}
+            alt={`new-${index}`}
+            className='h-24 w-24 object-cover rounded-md border'
+          />
+          <button
+            type='button'
+            onClick={() => {
+              const updated = [...newImages];
+              updated.splice(index, 1);
+              setNewImages(updated);
+            }}
+            className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-sm opacity-80 hover:opacity-100 transition-opacity'
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
 
-                {/* Upload area */}
-                <label
-                  className={`flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-primary-500 ${
-                    (editingProduct?.existingImages?.length || 0) +
-                      newImages.length >=
-                    5
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  <div className='flex flex-col items-center space-y-2'>
-                    <Upload size={24} className='text-gray-500' />
-                    <span className='font-medium text-gray-600'>
-                      Drop files or{" "}
-                      <span className='text-primary-600 underline'>browse</span>
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      {(editingProduct?.existingImages?.length || 0) +
-                        newImages.length >=
-                      5
-                        ? "Maximum 5 images"
-                        : `Up to 5 images (${
-                            (editingProduct?.existingImages?.length || 0) +
-                            newImages.length
-                          }/5)`}
-                    </span>
-                  </div>
-                  <input
-                    type='file'
-                    accept='image/*'
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files);
-                      const total =
-                        (editingProduct?.existingImages?.length || 0) +
-                        newImages.length +
-                        files.length;
+  {/* Upload area */}
+  <label
+    className={`flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-primary-500 ${
+      (editingProduct?.existingImages?.length || 0) + newImages.length >= 5
+        ? 'opacity-50 cursor-not-allowed'
+        : ''
+    }`}
+  >
+    <div className='flex flex-col items-center space-y-2'>
+      <Upload size={24} className='text-gray-500' />
+      <span className='font-medium text-gray-600'>
+        Drop files or <span className='text-primary-600 underline'>browse</span>
+      </span>
+      <span className='text-xs text-gray-500'>
+        {(editingProduct?.existingImages?.length || 0) + newImages.length >= 5
+          ? 'Maximum 5 images'
+          : `Up to 5 images (${(editingProduct?.existingImages?.length || 0) + newImages.length}/5)`}
+      </span>
+    </div>
+    <input
+      type='file'
+      accept='image/*'
+      multiple
+      onChange={(e) => {
+        const files = Array.from(e.target.files);
+        const total =
+          (editingProduct?.existingImages?.length || 0) + newImages.length + files.length;
 
-                      if (total > 5) {
-                        toast.error("Maximum 5 images allowed");
-                        return;
-                      }
+        if (total > 5) {
+          toast.error('Maximum 5 images allowed');
+          return;
+        }
 
-                      setNewImages((prev) => [...prev, ...files]);
-                    }}
-                    className='hidden'
-                    disabled={
-                      (editingProduct?.existingImages?.length || 0) +
-                        newImages.length >=
-                      5
-                    }
-                  />
-                </label>
-              </div>
+        setNewImages((prev) => [...prev, ...files]);
+      }}
+      className='hidden'
+      disabled={
+        (editingProduct?.existingImages?.length || 0) + newImages.length >= 5
+      }
+    />
+  </label>
+</div>
+
 
               {/* EDIT FORM */}
               <form onSubmit={handleEditSubmit} className='mt-4 space-y-4'>
@@ -1030,6 +1062,7 @@ const ProductList = () => {
                     />
                   </div>
                 </div>
+                
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label className='block text-sm font-medium'>Stock</label>
@@ -1061,6 +1094,43 @@ const ProductList = () => {
                     />
                   </div>
                 </div>
+               <div className='grid grid-cols-2 gap-4'>
+  <div>
+    <label className='block text-sm font-medium'>Rack</label>
+    <input
+      type='number'
+      value={editFormData.rack ?? ""}
+      onChange={(e) =>
+        setEditFormData((prev) => ({
+          ...prev,
+          rack: e.target.value === "" ? "" : Number(e.target.value),
+        }))
+      }
+      className='w-full border rounded px-3 py-2'
+      required
+    />
+  </div>
+
+  <div>
+    <label className='block text-sm font-medium'>Column</label>
+    <input
+      type='number'
+      value={editFormData.column ?? ""}
+      onChange={(e) =>
+        setEditFormData((prev) => ({
+          ...prev,
+          column: e.target.value === "" ? "" : Number(e.target.value),
+        }))
+      }
+      className='w-full border rounded px-3 py-2'
+      required
+    />
+  </div>
+</div>
+
+                
+                
+                
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label className='block text-sm font-medium'>Fabric</label>

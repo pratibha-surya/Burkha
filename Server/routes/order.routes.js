@@ -19,12 +19,13 @@ const {
    
   
 } = require('../controllers/order.controller');
+const { sendOrderMail } = require('../Middleware/order.MIddleware');
 
 
 
 const router = express.Router();
 
-router.post('/', createOrder);
+router.post('/',sendOrderMail, createOrder);
 router.get('/', getAllOrders);
 router.get('/:id', getOrderById);
 router.put('/:id', updateOrder);
@@ -39,6 +40,7 @@ router.get('/dueAmount/:hasDueAmount', getOrdersWithDueAmount);
 router.get("/member/:id", getMemberById)
 router.post('/send-order-email', sendOrderEmailById);
 router.get('/dueAmount', getOrdersDueAmount);
+router.post("/place", sendOrderMail)
 router.get('/today', async (req, res) => {
   try {
     const today = new Date();

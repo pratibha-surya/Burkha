@@ -109,6 +109,9 @@ const createProduct = async (req, res) => {
       stock,
       youtubeUrl,
       mrp,
+     
+      column,
+        rack,
  // make sure this is included
     } = req.body;
 
@@ -150,6 +153,9 @@ const createProduct = async (req, res) => {
       barcodeNumber,
       barcode: barcodeImage,
       mrp,
+      
+      column,
+        rack,
     });
 
     await newProduct.save();

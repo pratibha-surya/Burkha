@@ -44,6 +44,9 @@ const productSchema = new mongoose.Schema({
     type:String,
     required:true,
   },
+  
+  column: { type: String, default: "" },
+  rack: { type: String, default: "" },
 
   homeVisibility: { type: Boolean, default: false },
   size: [String],
