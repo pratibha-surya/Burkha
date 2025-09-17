@@ -5,6 +5,7 @@ const Order = require("../models/orderModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
+const { sendMailer } = require('../utils/mail');
 
 // Register new user (Create)
 const Registration = async (req, res) => {
@@ -100,28 +101,30 @@ const updateUser = async (req, res) => {
     }
 
     // ✅ Send email after successful update
-    const transporter = nodemailer.createTransport({
-      service: "gmail", // or use SMTP settings for production
-      auth: {
-        user: 'adityajainghetal@gmail.com',  // Secure way: use environment variables
-                pass: 'wjiv vwra gbpo mkgr' 
-      },
-    });
+    // const transporter = nodemailer.createTransport({
+    //   service: "gmail", // or use SMTP settings for production
+    //   auth: {
+    //     user: 'adityajainghetal@gmail.com',  // Secure way: use environment variables
+    //      pass: 'wjiv vwra gbpo mkgr' 
+    //   },
+    // });
 
-    const mailOptions = {
-      from: "adityajainghetal@gmail.com",
-      to: updatedUser.email, // make sure `email` is in the user model
-      subject: "Your Profile Has Been Updated",
-      html: `
-        <h3>Hello ${updatedUser.name || "User"},</h3>
-        <p>Your profile has been updated successfully.</p>
-        <p>If you didn't request this update, please contact support immediately.</p>
-        <br />
-        <p>Thank you,<br />Team</p>
-      `,
-    };
+    // const mailOptions = {
+    //   from: "adityajainghetal@gmail.com",
+    //   to: updatedUser.email, // make sure `email` is in the user model
+    //   subject: "Your Profile Has Been Updated",
+    //   html: `
+    //     <h3>Hello ${updatedUser.name || "User"},</h3>
+    //     <p>Your profile has been updated successfully.</p>
+    //     <p>If you didn't request this update, please contact support immediately.</p>
+    //     <br />
+    //     <p>Thank you,<br />Team</p>
+    //   `,
+    // };
 
-    await transporter.sendMail(mailOptions);
+    // await transporter.sendMail(mailOptions);
+
+
 
     res.status(200).json({ message: "User updated successfully!", user: updatedUser });
   } catch (error) {
@@ -168,7 +171,48 @@ const Login = async (req, res) => {
     }
 
     // Create JWT token (optional, include secret)
-    const token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user._id }, 'fiuhfulhffhkjhfskjhi', { expiresIn: '1d' });
+      const StaticMessage = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    padding: 20px;
+    }
+    .email-container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #007bff;
+            }
+            p {
+                font-size: 16px;
+                color: #333;
+                }
+                .footer {
+                    margin-top: 20px;
+                    font-size: 12px;
+                    color: #aaa;
+                    }
+                    </style>
+                    </head>
+                    <body>
+                    <div class="email-container">
+                    <h2>Welcome to Burkha!</h2>
+                    <p>successfully login done</p>
+                    
+                    </div>
+                    </body>
+                    </html>
+                    `;
+    await sendMailer({to:email,subject:"login"})
+   
 
     res.status(200).json({ message: "Login successful", token, user: { ...user._doc, password: undefined } });
   } catch (error) {

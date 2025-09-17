@@ -38,6 +38,9 @@ const ProductList = () => {
   const [addingToCart, setAddingToCart] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  
+const [previewImage, setPreviewImage] = useState(null);       // to show image preview
+
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -382,7 +385,45 @@ const ProductList = () => {
     if (product.stock <= 0) return;
     addToCart(product._id, 1);
   };
+const handleExport = () => {
+  const data = filteredProducts.map(product => ({
+    Name: product.name,
+    Price: product.price,
+    MRP: product.mrp,
+    Stock: product.stock,
+    Category: product.category?.name || "",
+    Sizes: product.size?.join(", ") || "",
+    Color: product.color || "",
+    Fabric: product.fabric || "",
+    Rack: product.rack || "",
+    Column: product.column || "",
+    Description: product.description || "",
+  }));
 
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+  XLSX.writeFile(workbook, "products.xlsx");
+};
+
+// Import Handler
+const handleImport = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+    console.log("Imported Data:", jsonData);
+    // 🔄 Update your product state here or call an API to store in DB
+  };
+  reader.readAsArrayBuffer(file);
+};
   /* ------------- RENDER ------------- */
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -448,44 +489,7 @@ const ProductList = () => {
     }
   };
 
-    const exportToExcel = () => {
-      const ws = XLSX.utils.json_to_sheet(
-        state.filteredOrders.map(o => ({
-          OrderID: o._id,
-          Date: new Date(o.createdAt).toLocaleDateString(),
-          Vendor: o.orderItems[0]?.discountName?.firmName || "N/A",
-          Total: o.totalPriceAfterDiscount ?? o.totalPrice,
-          Paid: o.paidAmount || 0,
-          Due: o.dueAmount ?? (o.totalPriceAfterDiscount ?? o.totalPrice) - (o.paidAmount || 0),
-          PaymentStatus: o.paymentStatus?.toUpperCase(),
-          Status: o.status?.toUpperCase()
-        }))
-      );
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Orders");
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      saveAs(new Blob([wbout], { type: "application/octet-stream" }), "orders.xlsx");
-    };
-  
-    // ✅ PDF export using autoTable properly
-    const exportToPDF = () => {
-      const doc = new jsPDF();
-      doc.text("Orders Report", 14, 15);
-      const tableColumn = ["Order ID", "Date", "Vendor", "Total", "Paid", "Due", "Payment Status", "Status"];
-      const tableRows = state.filteredOrders.map(o => [
-        o._id.slice(-6).toUpperCase(),
-        new Date(o.createdAt).toLocaleDateString(),
-        o.orderItems[0]?.discountName?.firmName || "N/A",
-        o.totalPriceAfterDiscount ?? o.totalPrice,
-        o.paidAmount || 0,
-        o.dueAmount ?? (o.totalPriceAfterDiscount ?? o.totalPrice) - (o.paidAmount || 0),
-        o.paymentStatus?.toUpperCase(),
-        o.status?.toUpperCase()
-      ]);
-  
-      autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
-      doc.save("orders.pdf");
-    };
+   
   return (
     <div className='bg-white shadow rounded-lg max-w-5xl py-8'>
       {/* PRINT DIALOG */}
@@ -532,16 +536,49 @@ const ProductList = () => {
       )}
 
       {/* HEADER */}
-      <div className='px-6 py-4 border-b flex justify-between items-center'>
-        <ToastContainer />
-        <h2 className='text-xl font-bold flex items-center'>
-          <Package className='mr-2' size={24} />
-          Product List
-        </h2>
-        <button onClick={loadProducts} title='Refresh'>
-          <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
-        </button>
-      </div>
+     <div className='px-6 py-4 border-b flex justify-between items-center'>
+  <ToastContainer />
+
+  {/* Left side - Title + Refresh */}
+  <div className="flex items-center gap-4">
+    <h2 className='text-xl font-bold flex items-center'>
+      <Package className='mr-2' size={24} />
+      Product List
+    </h2>
+    <button onClick={loadProducts} title='Refresh'>
+      <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+    </button>
+  </div>
+
+  {/* Right side - Export and Import */}
+  <div className="flex gap-2">
+    {/* Export Button with SVG */}
+    <button
+      onClick={handleExport}
+      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+    >
+      <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Excel
+    </button>
+
+    {/* Import Excel */}
+    <label className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition">
+      <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v-4m0 0V5m0 5l-3-3m3 3l3-3m6 8a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Import
+      <input
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleImport}
+        className="hidden"
+      />
+    </label>
+  </div>
+</div>
+
 
       {/* SEARCH */}
       <div className='p-4 border-b'>
@@ -751,155 +788,194 @@ const ProductList = () => {
 
       {/* VIEW MODAL */}
       {selectedProduct && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
-          <div className='bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
-            <div className='p-6'>
-              <div className='flex justify-between items-center mb-4'>
-                <h2 className='text-2xl font-bold'>{selectedProduct.name}</h2>
-                <button onClick={() => setSelectedProduct(null)}>
-                  <X size={24} />
-                </button>
-              </div>
-              {selectedProduct.images?.length ? (
-                <div className='grid grid-cols-4 gap-2 mb-6'>
-                  <img
-                    src={selectedProduct.images[0]}
-                    className='col-span-4 h-64 object-contain bg-gray-100 rounded'
-                    alt={selectedProduct.name}
-                  />
-                  {selectedProduct.images.slice(1).map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      className='h-16 object-cover bg-gray-100 rounded'
-                      alt={`${selectedProduct.name} ${idx + 2}`}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className='h-64 bg-gray-100 flex items-center justify-center mb-6'>
-                  <Package size={64} className='text-gray-400' />
-                </div>
-              )}
-              <div className='flex items-baseline mb-4'>
-                <span className='text-primary-600 font-bold text-2xl'>
-                  ₹{Number(selectedProduct.price).toFixed(2)}
-                </span>
-                {selectedProduct.mrp > selectedProduct.price && (
-                  <>
-                    <span className='ml-2 text-lg text-gray-500 line-through'>
-                      ₹{Number(selectedProduct.mrp).toFixed(2)}
-                    </span>
-                    <span className='ml-2 bg-red-100 text-red-800 text-sm px-2 rounded'>
-                      {Math.round(
-                        ((selectedProduct.mrp - selectedProduct.price) /
-                          selectedProduct.mrp) *
-                          100
-                      )}
-                      % OFF
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className='grid grid-cols-2 gap-4 mb-6'>
-                {selectedProduct.category && (
-                  <div>
-                    <h3 className='text-sm text-gray-500'>Category</h3>
-                    <p>{selectedProduct.category.name}</p>
-                  </div>
-                )}
-                {selectedProduct.subCategory && (
-                  <div>
-                    <h3 className='text-sm text-gray-500'>Sub-Category</h3>
-                    <p>{selectedProduct.subCategory.name}</p>
-                  </div>
-                )}
-                {selectedProduct.color && (
-                  <div>
-                    <h3 className='text-sm text-gray-500'>Color</h3>
-                    <p>{selectedProduct.color}</p>
-                  </div>
-                )}
-                {selectedProduct.fabric && (
-                  <div>
-                    <h3 className='text-sm text-gray-500'>Fabric</h3>
-                    <p>{selectedProduct.fabric}</p>
-                  </div>
-                )}
-                {selectedProduct.column && (
-  <div>
-    <h3 className='text-sm text-gray-500'>Column</h3>
-    <p>{selectedProduct.column}</p>
-  </div>
-)}
-                 {selectedProduct.rack && (
-  <div>
-    <h3 className='text-sm text-gray-500'>Rack</h3>
-    <p>{selectedProduct.rack}</p>
-  </div>
-)}
+  <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
+    <div className='bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
+      <div className='p-6'>
+        <div className='flex justify-between items-center mb-4'>
+          <h2 className='text-2xl font-bold'>{selectedProduct.name}</h2>
+          <button onClick={() => setSelectedProduct(null)}>
+            <X size={24} />
+          </button>
+        </div>
 
+        {/* Image Preview */}
+        {selectedProduct.images?.length ? (
+          <div className='grid grid-cols-4 gap-2 mb-6'>
+            {/* Main Image */}
+            <img
+              src={selectedProduct.images[0]}
+              className='col-span-4 h-64 object-contain bg-gray-100 rounded-lg cursor-pointer'
+              alt={selectedProduct.name}
+              onClick={() => setPreviewImage(selectedProduct.images[0])}
+            />
 
-                {selectedProduct.size?.length && (
-                  <div>
-                    <h3 className='text-sm text-gray-500'>Sizes</h3>
-                    <div className='flex gap-2 mt-1'>
-                      {selectedProduct.size.map((s) => (
-                        <span key={s} className='px-2 py-1 border rounded'>
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+            {/* Thumbnails as Circles */}
+            {selectedProduct.images.slice(1).map((img, idx) => (
+              <img
+                key={idx}
+                src={img}
+                className='h-16 w-16 object-cover bg-gray-300 rounded-full cursor-pointer border border-gray-300'
+                alt={`${selectedProduct.name} ${idx + 2}`}
+                onClick={() => setPreviewImage(img)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className='h-64 bg-gray-300 flex items-center justify-center mb-6'>
+            <Package size={64} className='text-gray-400' />
+          </div>
+        )}
+
+        {/* Price and Discount */}
+        <div className='flex items-baseline mb-4'>
+          <span className='text-primary-600 font-bold text-2xl'>
+            ₹{Number(selectedProduct.price).toFixed(2)}
+          </span>
+          {selectedProduct.mrp > selectedProduct.price && (
+            <>
+              <span className='ml-2 text-lg text-gray-500 line-through'>
+                ₹{Number(selectedProduct.mrp).toFixed(2)}
+              </span>
+              <span className='ml-2 bg-red-100 text-red-800 text-sm px-2 rounded'>
+                {Math.round(
+                  ((selectedProduct.mrp - selectedProduct.price) /
+                    selectedProduct.mrp) *
+                    100
                 )}
-              </div>
-              {selectedProduct.description && (
-                <div className='mb-6'>
-                  <h3 className='text-lg font-medium mb-2'>Description</h3>
-                  <p className='text-gray-600'>{selectedProduct.description}</p>
-                </div>
-              )}
-              <div className='flex gap-3'>
-                <button
-                  onClick={() => handleAddToCartClick(selectedProduct)}
-                  disabled={selectedProduct.stock <= 0}
-                  className={`flex-1 py-2 px-4 rounded text-white ${
-                    selectedProduct.stock <= 0
-                      ? "bg-gray-400"
-                      : "bg-primary-600"
-                  }`}
-                >
-                  {selectedProduct.stock <= 0 ? "Out of Stock" : "Add to Cart"}
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingProduct(selectedProduct);
-                    setSelectedProduct(null);
-                  }}
-                  className='bg-yellow-50 px-4 py-2 rounded'
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteP(selectedProduct._id)}
-                  className='bg-red-50 px-4 py-2 rounded'
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => {
-                    handlePrintProduct(selectedProduct);
-                    setSelectedProduct(null);
-                  }}
-                  className='bg-green-50 px-4 py-2 rounded'
-                >
-                  Print
-                </button>
+                % OFF
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className='grid grid-cols-2 gap-4 mb-6'>
+          {selectedProduct.category && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Category</h3>
+              <p>{selectedProduct.category.name}</p>
+            </div>
+          )}
+          {selectedProduct.subCategory && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Sub-Category</h3>
+              <p>{selectedProduct.subCategory.name}</p>
+            </div>
+          )}
+          {selectedProduct.color && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Color</h3>
+              <p>{selectedProduct.color}</p>
+            </div>
+          )}
+          {selectedProduct.fabric && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Fabric</h3>
+              <p>{selectedProduct.fabric}</p>
+            </div>
+          )}
+          {selectedProduct.column && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Column</h3>
+              <p>{selectedProduct.column}</p>
+            </div>
+          )}
+          {selectedProduct.rack && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Rack</h3>
+              <p>{selectedProduct.rack}</p>
+            </div>
+          )}
+          {selectedProduct.size?.length && (
+            <div>
+              <h3 className='text-sm text-gray-500'>Sizes</h3>
+              <div className='flex gap-2 mt-1 flex-wrap'>
+                {selectedProduct.size.map((s) => (
+                  <span key={s} className='px-2 py-1 border rounded'>
+                    {s}
+                  </span>
+                ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
+
+        {/* Description */}
+        {selectedProduct.description && (
+          <div className='mb-6'>
+            <h3 className='text-lg font-medium mb-2'>Description</h3>
+            <p className='text-gray-600'>{selectedProduct.description}</p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className='flex gap-3 flex-wrap'>
+          <button
+            onClick={() => handleAddToCartClick(selectedProduct)}
+            disabled={selectedProduct.stock <= 0}
+            className={`flex-1 py-2 px-4 rounded text-white ${
+              selectedProduct.stock <= 0
+                ? 'bg-gray-400'
+                : 'bg-primary-600'
+            }`}
+          >
+            {selectedProduct.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+          <button
+            onClick={() => {
+              setEditingProduct(selectedProduct);
+              setSelectedProduct(null);
+            }}
+            className='bg-yellow-50 px-4 py-2 rounded'
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => deleteP(selectedProduct._id)}
+            className='bg-red-50 px-4 py-2 rounded'
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => {
+              handlePrintProduct(selectedProduct);
+              setSelectedProduct(null);
+            }}
+            className='bg-green-50 px-4 py-2 rounded'
+          >
+            Print
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Fullscreen Image Preview */}
+{previewImage && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    onClick={() => setPreviewImage(null)}
+  >
+    <div
+      className="relative max-w-3xl w-full p-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        className="absolute top-2 right-2 text-white text-3xl font-bold"
+        onClick={() => setPreviewImage(null)}
+      >
+        &times;
+      </button>
+      <img
+        src={previewImage}
+        alt="Preview"
+        className="w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+      />
+    </div>
+  </div>
+)}
+
 
       {/* EDIT MODAL */}
       {editingProduct && (

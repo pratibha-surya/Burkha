@@ -59,6 +59,8 @@ import VendorDetail from "./pages/ViewCustomer/vendordeatil";
 import RegistrationVendor from "./pages/RegsitartionVendor/RegistrationVendor";
 import Outstanding from "./pages/Outstanding";
 import CreateOrder from "./pages/CreateOrder";
+import Catalogue from "./pages/Catelouge";
+
 
 
 
@@ -124,6 +126,7 @@ function AppContent({ onLogout }) {
       icon: Package,
       subItems: [
         { to: "/", label: "All Products", icon: Home },
+         { to: "/catalogue", label: "cataloue Products", icon: Home },
 
       ],
     },
@@ -405,6 +408,7 @@ function AppContent({ onLogout }) {
               <Route path="/registrationvendor" element={<RegistrationVendor />} />
               <Route path="/outstanding-payments" element={<Outstanding/>}/>
               <Route path="/create-order" element={<CreateOrder />} />
+              <Route path="/catalogue" element={<Catalogue/>}/>
              
             </Routes>
           </div>

@@ -64,6 +64,8 @@ const TodayOrders = () => {
   const fetchPaymentDetails = async (orderId) => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/payments/${orderId}`);
+      console.log(res?.data);
+      
       setPaymentDetails(res.data.payments || []);
     } catch (err) {
       console.error("Failed to fetch payment details:", err);

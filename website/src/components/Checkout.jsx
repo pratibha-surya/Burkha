@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { message } from "antd";
@@ -37,7 +36,6 @@ const Checkout = () => {
     }
   }, []);
 
-  // Calculate total amount and product names
   const discount = user?.user?.discount || 0;
   const hasDiscount = discount !== null;
 
@@ -166,7 +164,7 @@ const Checkout = () => {
     try {
       setIsLoading(true);
       const orderURL = "http://localhost:8080/paymentuser/orders";
-      console.log(orderURL)
+      console.log(orderURL);
 
       const userDataStr = localStorage.getItem("user");
       const userId = userDataStr ? JSON.parse(userDataStr).user?._id : "guest";
@@ -201,7 +199,8 @@ const Checkout = () => {
         initPay(data.data);
       } else {
         message.success("Order placed successfully, awaiting confirmation.");
-        navigate("/", { state: { orderId: data.data.id } });
+        // Navigate to thank-you page passing orderId in state
+        navigate("/thank-you", { state: { orderId: data.data.id } });
       }
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to create order.");
@@ -263,7 +262,7 @@ const Checkout = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
-                     required
+                    required
                   />
                 </div>
                 <div className="col-12">
@@ -274,7 +273,7 @@ const Checkout = () => {
                     name="businessName"
                     value={formData.businessName}
                     onChange={handleChange}
-                     required
+                    required
                   />
                 </div>
                 <div className="col-12">
@@ -307,7 +306,7 @@ const Checkout = () => {
                     name="apartment"
                     value={formData.apartment}
                     onChange={handleChange}
-                     required
+                    required
                   />
                 </div>
                 <div className="col-12">
@@ -340,7 +339,7 @@ const Checkout = () => {
                     name="postCode"
                     value={formData.postCode}
                     onChange={handleChange}
-                     required
+                    required
                   />
                 </div>
                 <div className="col-12">
@@ -403,126 +402,103 @@ const Checkout = () => {
                 </span>
               </div>
               <div className="border border-gray-100 rounded-8 px-24 py-40 mt-24">
-                <div className="mb-32 pb-32 border-bottom border-gray-100 flex-between gap-8">
-                  <span className="text-gray-900 fw-medium text-xl font-heading-two">
-                    Product
-                  </span>
-                  <span className="text-gray-900 fw-medium text-xl font-heading-two">
-                    Subtotal
-                  </span>
-                </div>
+                <div className="mb-32 pb-32 border-bottom border-gray-100">
+                  <div className="d-flex justify-content-between fw-semibold mb-20 text-black">
+                    <span>Product</span>
+                    <span>Total</span>
+                  </div>
 
-                {cartItems.map((item, index) => (
-                  <div className="flex-between gap-24 mb-32" key={index}>
-                    <div className="flex-align gap-12">
-                      <span className="text-gray-900 fw-normal text-md font-heading-two w-144">
-                        {item.name}
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="d-flex justify-content-between align-items-center mb-16"
+                    >
+                      <span>
+                        {item.name} × {item.qnty}
                       </span>
-                      <span className="text-gray-900 fw-normal text-md font-heading-two">
-                        <i className="ph-bold ph-x" />
-                      </span>
-                      <span className="text-gray-900 fw-semibold text-md font-heading-two">
-                        {item.qnty}
+                      <span className="fw-semibold">
+                        ₹
+                        {hasDiscount
+                          ? (
+                              item.price * item.qnty -
+                              (item.price * item.qnty * discount) / 100
+                            ).toFixed(2)
+                          : (item.price * item.qnty).toFixed(2)}
                       </span>
                     </div>
-                    <span className="text-gray-900 fw-bold text-md font-heading-two">
-                      ₹{item.price * item.qnty}
-                    </span>
-                  </div>
-                ))}
+                  ))}
 
-                <div className="border-top border-gray-100 pt-30 mt-30">
-                  <div className="mb-32 flex-between gap-8">
-                    <span className="text-gray-900 font-heading-two text-xl fw-semibold">
-                      Subtotal
-                    </span>
-                    <span className="text-gray-900 font-heading-two text-md fw-bold">
-                      ₹{totalAmount}
-                    </span>
+                  <div className="d-flex justify-content-between fw-semibold mt-32 mb-12 text-black">
+                    <span>Subtotal</span>
+                    <span>₹{totalAmount.toFixed(2)}</span>
                   </div>
-                  <div className="mb-0 flex-between gap-8">
-                    <span className="text-gray-900 font-heading-two text-xl fw-semibold">
-                      Total
-                    </span>
-                    <span className="text-gray-900 font-heading-two text-md fw-bold">
-                      ₹{totalAmount}
-                    </span>
+
+                  <div className="d-flex justify-content-between mb-16">
+                    <span className="text-gray-600">Shipping</span>
+                    <span className="text-gray-600">Free</span>
+                  </div>
+
+                  <div className="d-flex justify-content-between text-black">
+                    <span>Total</span>
+                    <span>₹{totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-32">
-                {[
-                  { id: "payment1", label: "Online Payment" },
-                  // { id: "payment2", label: "Check Payments" },
-                  {
-                    id: "payment3",
-                    label: "Cash on Delivery",
-                    disabled: hasDiscount,
-                  },
-                  // { id: "payment4", label: "Online Payment (Razorpay)" },
-                ].map((payment) => (
-                  <div className="payment-item" key={payment.id}>
-                    <div className="form-check common-check common-radio py-16 mb-0">
-                      <input
-                        className="form-check-input"
-                        type="radio"
-                        name="payment"
-                        id={payment.id}
-                        checked={selectedPayment === payment.id}
-                        onChange={handlePaymentChange}
-                        disabled={payment.disabled}
-                      />
-                      <label
-                        className={`form-check-label fw-semibold ${
-                          payment.disabled
-                            ? "text-gray-400"
-                            : "text-neutral-600"
-                        }`}
-                        htmlFor={payment.id}
-                      >
-                        {payment.label}
-                        {payment.disabled && (
-                          <span className="text-xs text-danger ms-2">
-                            (Not available)
-                          </span>
-                        )}
-                      </label>
-                    </div>
-                    {selectedPayment === payment.id && (
-                      <div className="payment-item__content px-16 py-24 rounded-8 bg-main-50 position-relative d-block">
-                        <p className="text-gray-800">
-                          {payment.id === "payment1" &&
-                            "Make your payment directly into our bank account. Please use your Order ID as the payment reference."}
-                          {payment.id === "payment2" &&
-                            "Please send a check to our store address."}
-                          {payment.id === "payment3" &&
-                            "Pay with cash upon delivery."}
-                          {payment.id === "payment4" &&
-                            "Secure online payment through Razorpay. You will be redirected to their payment gateway."}
-                        </p>
-                      </div>
-                    )}
+                <div className="checkout-payment-method mt-32">
+                  <h6 className="mb-24 text-lg">Payment Method</h6>
+
+                  <div className="mb-20 d-flex align-items-center">
+                    <input
+                      id="payment1"
+                      name="payment"
+                      type="radio"
+                      checked={selectedPayment === "payment1"}
+                      onChange={handlePaymentChange}
+                    />
+                    <label htmlFor="payment1" className="ms-16">
+                      Online Payment
+                    </label>
                   </div>
-                ))}
-              </div>
+                  <div className="mb-20 d-flex align-items-center">
+                    <input
+                      id="payment2"
+                      name="payment"
+                      type="radio"
+                      checked={selectedPayment === "payment2"}
+                      onChange={handlePaymentChange}
+                    />
+                    <label htmlFor="payment2" className="ms-16">
+                      Cheque Payment
+                    </label>
+                  </div>
+                  <div className="mb-20 d-flex align-items-center">
+                    <input
+                      id="payment3"
+                      name="payment"
+                      type="radio"
+                      checked={selectedPayment === "payment3"}
+                      onChange={handlePaymentChange}
+                    />
+                    <label htmlFor="payment3" className="ms-16">
+                      Cash on Delivery (COD)
+                    </label>
+                  </div>
+                  <div className="d-flex align-items-center">
+                    <input
+                      id="payment4"
+                      name="payment"
+                      type="radio"
+                      checked={selectedPayment === "payment4"}
+                      onChange={handlePaymentChange}
+                    />
+                    <label htmlFor="payment4" className="ms-16">
+                      UPI
+                    </label>
+                  </div>
+                </div>
 
-              <div className="mt-32 pt-32 border-top border-gray-100">
-                <p className="text-gray-500">
-                  Your personal data will be used to process your order, support
-                  your experience throughout this website, and for other
-                  purposes described in our{" "}
-                  <Link
-                    to="#"
-                    className="text-main-600 text-decoration-underline"
-                  >
-                    privacy policy
-                  </Link>
-                  .
-                </p>
                 <button
-                  className="btn btn-main mt-40 py-18 w-100 rounded-8 mt-56"
-                  type="button"
+                  className="btn btn-primary w-100 mt-40"
                   onClick={handlePay}
                   disabled={isLoading}
                 >

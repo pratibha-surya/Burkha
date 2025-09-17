@@ -72,6 +72,7 @@ const Sidebar = () => {
       icon: Package,
       subItems: [
         { to: "/", label: "All Products", icon: Home },
+         { to: "/catalogue", label: "catalogue product", icon: Home },
        
       ],
     },

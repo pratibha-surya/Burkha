@@ -10,6 +10,8 @@ const mongoose = require("mongoose");
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const Registration = require("../models/RegistrationModel");
+const { sendMailer } = require("../utils/mail");
 
 // Map frontend payment modes to backend
 const paymentModeMap = {
@@ -39,34 +41,26 @@ router.post("/orders", async (req, res) => {
 
     // Validate required fields
     if (
-      !amount ||
-      isNaN(amount) ||
-      !cartItems ||
-      !Array.isArray(cartItems) ||
-      cartItems.length === 0 ||
-      !FirstName ||
-      !address ||
-      !email ||
-      !phone ||
-      !city ||
-      !state ||
-      !paymentMode
+      !amount || isNaN(amount) ||
+      !Array.isArray(cartItems) || cartItems.length === 0 ||
+      !FirstName || !address || !email || !phone ||
+      !city || !state || !paymentMode
     ) {
-      return res.status(400).json({ message: "Missing or invalid fields required" });
+      return res.status(400).json({ message: "Missing or invalid required fields." });
     }
 
-    // Validate payment mode
-    const mappedPaymentMode = paymentModeMap[paymentMode];
+    // Map payment mode
+    const mappedPaymentMode = paymentModeMap[paymentMode.toLowerCase()];
     if (!mappedPaymentMode) {
-      return res.status(400).json({ message: "Invalid payment mode" });
+      return res.status(400).json({ message: "Invalid payment mode." });
     }
 
-    // Validate chequeNumber for cheque payments
+    // Validate cheque number if payment mode is cheque
     if (mappedPaymentMode === "Cheque" && !chequeNumber) {
-      return res.status(400).json({ message: "Cheque number required for cheque payments" });
+      return res.status(400).json({ message: "Cheque number is required for cheque payments." });
     }
 
-    // Validate stock availability
+    // Validate stock for all cart items
     for (const item of cartItems) {
       const product = await Product.findById(item.productId);
       if (!product) {
@@ -77,37 +71,33 @@ router.post("/orders", async (req, res) => {
       }
     }
 
+    // Create order
     let order;
-
     if (mappedPaymentMode === "Online Transfer") {
-      // Create Razorpay order for online payments
       const instance = new Razorpay({
         key_id: process.env.KEY_ID,
         key_secret: process.env.KEY_SECRET,
       });
 
       const options = {
-        amount: amount * 100, // Convert to paise
+        amount: amount * 100, // in paise
         currency: "INR",
-receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-
+        receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 10000)}`
       };
 
-      order = await new Promise((resolve, reject) => {
-        instance.orders.create(options, (error, order) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(order);
-          }
-        });
-      });
+      try {
+        order = await instance.orders.create(options);
+      } catch (razorpayError) {
+        console.error("Razorpay error:", razorpayError);
+        return res.status(500).json({ message: "Failed to create Razorpay order", error: razorpayError });
+      }
     } else {
-      // Mock order ID for cash/cheque
-      order = { id: `manual-${crypto.randomBytes(10).toString("hex")}` };
+      order = {
+        id: `manual-${crypto.randomBytes(10).toString("hex")}`,
+      };
     }
 
-    // Save order details
+    // Save Order in DB
     await OrderModel.create({
       orderId: order.id,
       amount,
@@ -125,7 +115,7 @@ receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
       status: "Pending",
     });
 
-    // Save payment details
+    // Save Payment Details
     await Payments.create({
       amount,
       paymentMode: mappedPaymentMode,
@@ -138,10 +128,21 @@ receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
       remark: productname,
     });
 
+    // Send confirmation email
+    const userdata = await Registration.findById(id);
+    if (userdata && userdata.email) {
+      await sendMailer({
+        to: userdata.email,
+        subject: `Order Confirmation - Order #${order.id}`,
+        text: `Thank you for your order! Your order ID is ${order.id}.`
+      });
+    }
+
     res.status(200).json({ data: order });
+
   } catch (error) {
     console.error("Error in /orders:", error);
-    res.status(500).json({ message: error.message, error });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
 

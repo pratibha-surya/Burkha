@@ -26,6 +26,7 @@
     "jsqr": "^1.4.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.294.0",
+    "pdfjs-dist": "^5.4.149",
     "qrcode.react": "^4.2.0",
     "quagga": "^0.12.1",
     "react": "^18.2.0",

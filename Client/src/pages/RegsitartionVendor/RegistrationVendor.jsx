@@ -26,7 +26,7 @@
 
 //   const fetchUsers = async () => {
 //     try {
-//       const response = await axios.get('https://backend.umairabaya.com/user');
+//       const response = await axios.get('http://localhost:8080/user');
 //       console.log(response,'aaaaaaaaaaaaaaaaa')
 //       setUsers(response.data);
 //     } catch (error) {
@@ -64,7 +64,7 @@
 
 //   const handleUpdate = async (id) => {
 //     try {
-//       await axios.put(`https://backend.umairabaya.com/user/users/${id}`, formData);
+//       await axios.put(`http://localhost:8080/user/users/${id}`, formData);
 //       setEditingUser(null);
 //       fetchUsers();
 //     } catch (error) {
@@ -74,7 +74,7 @@
 
 //   const handleDelete = async (id) => {
 //     try {
-//       await axios.delete(`https://backend.umairabaya.com/user/users/${id}`);
+//       await axios.delete(`http://localhost:8080/user/users/${id}`);
 //       fetchUsers();
 //     } catch (error) {
 //       console.error('Error deleting user:', error);

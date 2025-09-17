@@ -7,6 +7,7 @@ import { debounce } from "lodash";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
+
 import autoTable from "jspdf-autotable"; 
 
 const Orders = () => {
@@ -52,6 +53,9 @@ const Orders = () => {
     try {
       setState(prev => ({ ...prev, paymentDetailsLoading: true }));
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/payments/${orderId}`);
+      
+      console.log(res?.data);
+      
       setState(prev => ({
         ...prev,
         paymentDetails: res.data.payments || [],
@@ -178,6 +182,7 @@ const Orders = () => {
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
+            {/* <option value="cancelled">Cancelled</option> */}
           </select>
           {state.updatingStatus[row._id] && <span className="text-xs text-gray-500">Updating...</span>}
         </div>

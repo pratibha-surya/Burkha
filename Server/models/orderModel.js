@@ -1,6 +1,3 @@
-
-
-
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
@@ -8,7 +5,8 @@ const orderSchema = new mongoose.Schema({
     {
       productId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,ref: 'product'
+        required: true,
+        ref: 'product'
       },
       productName: {
         type: String,
@@ -24,6 +22,15 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Quantity is required'],
         min: [1, 'Quantity must be at least 1']
+      },
+      amount: {
+        // new field
+        type: Number,
+        required: true,
+        min: [0, 'Amount cannot be negative'],
+        default: function () {
+          return this.price * this.quantity;
+        }
       },
       productImage: {
         type: String,
@@ -42,7 +49,7 @@ const orderSchema = new mongoose.Schema({
         city: String,
         address: String,
         discount: Number,
-        limit:Number,
+        limit: Number,
         createdAt: Date,
         updatedAt: Date
       },
@@ -55,7 +62,7 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         min: [0, 'Discounted price cannot be negative'],
         validate: {
-          validator: function(value) {
+          validator: function (value) {
             return value <= this.price;
           },
           message: 'Discounted price cannot be higher than original price'
@@ -74,15 +81,22 @@ const orderSchema = new mongoose.Schema({
     required: [true, 'Total price after discount is required'],
     min: [0, 'Total price after discount cannot be negative'],
     validate: {
-      validator: function(value) {
+      validator: function (value) {
         return value <= this.totalPrice;
       },
       message: 'Discounted total cannot be higher than original total'
     }
   },
+  amount: {
+    // optional: order-level amount
+    type: Number,
+    default: function () {
+      return this.orderItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+    }
+  },
   dueAmount: {
     type: Number,
-    default: function() {
+    default: function () {
       return this.totalPriceAfterDiscount || this.totalPrice;
     },
     min: [0, 'Due amount cannot be negative']
@@ -104,7 +118,7 @@ const orderSchema = new mongoose.Schema({
   deliveredAt: {
     type: Date,
     validate: {
-      validator: function(value) {
+      validator: function (value) {
         return !value || value <= new Date();
       },
       message: 'Delivery date cannot be in the future'

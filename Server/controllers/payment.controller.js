@@ -7,6 +7,14 @@ const User = require("../models/RegistrationModel")
 const createPayment = async (req, res) => {
   const { orderId, amount, paymentMode, receivingDate, remark, chequeNumber } = req.body;
 
+  console.log(orderId);
+  console.log(amount);
+  console.log(paymentMode);
+  console.log(receivingDate);
+  console.log(remark);
+  console.log(chequeNumber);
+  
+
   try {
     // Validate required fields
     if (!orderId || !amount || !paymentMode) {

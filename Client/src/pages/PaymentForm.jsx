@@ -52,6 +52,9 @@ const PaymentForm = ({ orderId, totalAmount, dueAmount, onPaymentSuccess }) => {
         delete paymentData.chequeNumber;
       }
 
+      console.log(paymentData);
+      
+
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/payments`, paymentData);
 
       onPaymentSuccess(res.data.payment);

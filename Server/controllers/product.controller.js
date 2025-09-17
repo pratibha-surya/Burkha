@@ -14,7 +14,9 @@ const getAllProducts = async (req, res) => {
     if (category) {
       query.category = category;
     }
-    const products = await Product.find(query).populate("category subCategory").sort({createdAt:-1});
+    const products = await Product.find(query)
+      .populate("category subCategory")
+      .sort({ createdAt: -1 });
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products", error });
@@ -51,7 +53,7 @@ const getAllProductshome = async (req, res) => {
 
     // Add search condition if provided
     if (search) {
-      query.name = { $regex: search, $options: "i" }; 
+      query.name = { $regex: search, $options: "i" };
     }
 
     // Add category filter if provided
@@ -60,10 +62,10 @@ const getAllProductshome = async (req, res) => {
     }
 
     // Execute query with population
-    const products = await Product.find(query).sort({ createdAt: -1 })
+    const products = await Product.find(query)
+      .sort({ createdAt: -1 })
       .populate("category subCategory")
       .exec(); // Using .exec() for better promise handling
-    
 
     res.status(200).json({
       success: true,
@@ -96,7 +98,6 @@ const getProductById = async (req, res) => {
 // Create a product
 const createProduct = async (req, res) => {
   try {
-   
     const {
       name,
       price,
@@ -109,10 +110,10 @@ const createProduct = async (req, res) => {
       stock,
       youtubeUrl,
       mrp,
-     
+
       column,
-        rack,
- // make sure this is included
+      rack,
+      // make sure this is included
     } = req.body;
 
     // Parse JSON string if size is sent as stringified array
@@ -136,6 +137,7 @@ const createProduct = async (req, res) => {
     // Generate numeric barcode (12 digits for EAN-13)
     const barcodeNumber = Date.now().toString().slice(-12).padStart(12, "0");
     const barcodeImage = await generateBarcode(barcodeNumber);
+    
 
     // Create product with youtubeUrl
     const newProduct = new Product({
@@ -153,9 +155,9 @@ const createProduct = async (req, res) => {
       barcodeNumber,
       barcode: barcodeImage,
       mrp,
-      
+
       column,
-        rack,
+      rack,
     });
 
     await newProduct.save();
@@ -167,10 +169,6 @@ const createProduct = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
-
-
 
 const purchaseProduct = async (req, res) => {
   try {
@@ -203,7 +201,6 @@ const getproducthome = async (req, res) => {
   const newHomeVisibility = homeVisibility;
 
   try {
-   
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       { homeVisibility: homeVisibility },
@@ -437,7 +434,6 @@ const removeImageFromProduct = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 module.exports = {
   getAllProducts,

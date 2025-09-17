@@ -16,7 +16,9 @@ const Invoice = () => {
   const fetchDueAmountOrders = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/order/dueAmount/${true}`);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/order/dueAmounts/${true}`);
+      console.log(response);
+      
       const ordersWithFormattedId = response.data.orders.map(order => ({
         ...order,
         formattedId: `ORD-${order._id.toString().substring(0, 8).toUpperCase()}`
