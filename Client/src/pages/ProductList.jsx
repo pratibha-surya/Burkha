@@ -962,7 +962,7 @@ const handleImport = (event) => {
       onClick={(e) => e.stopPropagation()}
     >
       <button
-        className="absolute top-2 right-2 text-white text-3xl font-bold"
+        className="absolute top-2 right-0 text-black text-1xl font-bold"
         onClick={() => setPreviewImage(null)}
       >
         &times;
